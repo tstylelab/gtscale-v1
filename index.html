@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>TSG Guitar Scale Viewer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #f0f2f5;
+            color: #222;
+            font-family: system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+            padding: 16px;
+            min-height: 100vh;
+        }
+
+        /* ====== Header ====== */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        h1 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 400;
+            color: #1a1a2e;
+            letter-spacing: 0.1em;
+        }
+
+        /* ====== Mode tabs ====== */
+        .mode-tabs {
+            display: flex;
+            background: #e0e3ea;
+            border-radius: 10px;
+            padding: 3px;
+            gap: 2px;
+        }
+
+        .mode-tab {
+            padding: 9px 22px;
+            border: none;
+            background: transparent;
+            color: #666;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .mode-tab.active {
+            background: #fff;
+            color: #1a1a2e;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+        }
+
+        /* ====== Print button ====== */
+        .print-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            background: #1a1a2e;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .print-btn:hover { background: #2e2e50; }
+        .print-btn:active { transform: scale(0.97); }
+
+        /* ====== Panel (auto / free) ====== */
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        /* ====== Controls (auto mode) ====== */
+        .controls {
+            background: #fff;
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .ctrl-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .ctrl-label {
+            font-size: 0.9rem;
+            color: #888;
+            width: 70px;
+            flex-shrink: 0;
+            font-weight: 600;
+        }
+
+        .root-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+
+        .rbtn {
+            width: 44px;
+            height: 42px;
+            border: 1.5px solid #ddd;
+            background: #f7f8fa;
+            color: #444;
+            border-radius: 7px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: 0.12s;
+            -webkit-tap-highlight-color: transparent;
+            font-weight: 600;
+        }
+        .rbtn:active { transform: scale(0.92); }
+        .rbtn.active {
+            background: #c0392b;
+            border-color: #c0392b;
+            color: #fff;
+        }
+
+        .scale-sel {
+            background: #f7f8fa;
+            color: #333;
+            border: 1.5px solid #ddd;
+            border-radius: 7px;
+            padding: 9px 12px;
+            font-size: 1rem;
+            cursor: pointer;
+            min-width: 220px;
+        }
+
+        .nttn-btns { display: flex; gap: 4px; }
+
+        .nbtn {
+            padding: 9px 16px;
+            border: 1.5px solid #ddd;
+            background: #f7f8fa;
+            color: #555;
+            border-radius: 7px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: 0.12s;
+            font-weight: 600;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .nbtn.active {
+            background: #2176ae;
+            border-color: #2176ae;
+            color: #fff;
+        }
+
+        /* ====== Scale info bar ====== */
+        .scale-bar {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .scale-bar .stitle {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        .scale-bar .snotes {
+            font-size: 0.95rem;
+            color: #888;
+            margin-top: 4px;
+            letter-spacing: 0.06em;
+        }
+
+        /* ====== Free mode controls ====== */
+        .free-controls {
+            background: #fff;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 14px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .free-controls .ctrl-label {
+            font-size: 0.72rem;
+            color: #888;
+            font-weight: 600;
+        }
+
+        .color-btns { display: flex; gap: 6px; }
+
+        .cbtn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: 0.12s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .cbtn.active {
+            border-color: #222;
+            transform: scale(1.15);
+        }
+
+        .fret-input {
+            width: 52px;
+            padding: 7px 8px;
+            border: 1.5px solid #ddd;
+            border-radius: 7px;
+            font-size: 0.95rem;
+            text-align: center;
+            background: #f7f8fa;
+            color: #333;
+        }
+        .fret-sep {
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .load-btn {
+            padding: 9px 18px;
+            background: #2176ae;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.12s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .load-btn:hover { background: #1a5f8a; }
+        .load-btn:active { transform: scale(0.97); }
+
+        .play-btn {
+            padding: 9px 16px;
+            background: #2e7d32;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.12s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .play-btn:hover { background: #1b5e20; }
+        .play-btn:active { transform: scale(0.97); }
+
+        .stop-btn {
+            padding: 9px 16px;
+            background: #c62828;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.12s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .stop-btn:disabled { background: #ccc; cursor: default; }
+        .stop-btn:not(:disabled):hover { background: #b71c1c; }
+
+        .clear-btn {
+            padding: 9px 18px;
+            background: #f0f2f5;
+            border: 1.5px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #555;
+            cursor: pointer;
+            transition: 0.12s;
+        }
+        .clear-btn:hover { background: #e5e8ee; }
+
+        /* ====== Fretboard shared ====== */
+        .fb-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 4px;
+        }
+
+        .fretboard {
+            background: linear-gradient(180deg, #e8d5b0 0%, #f0dfc0 40%, #e8d5b0 100%);
+            border-radius: 10px 10px 0 0;
+            padding: 10px 0;
+            min-width: 1080px;
+            border: 2px solid #c8a96e;
+            border-bottom: none;
+            position: relative;
+        }
+
+        .str-row {
+            display: flex;
+            align-items: center;
+            height: 58px;
+        }
+
+        .str-label {
+            width: 32px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #8B5E3C;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .nut-area {
+            width: 38px;
+            height: 58px;
+            position: relative;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-right: 7px solid #d4c5a0;
+        }
+
+        .fret-cell {
+            flex: 1;
+            min-width: 46px;
+            height: 58px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-right: 2px solid #a09070;
+        }
+        .fret-cell:last-child { border-right: none; }
+
+        /* Position marker dots on fretboard */
+        .fret-cell.has-marker::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 7px;
+            height: 7px;
+            background: #b8a070;
+            border-radius: 50%;
+            opacity: 0.7;
+        }
+
+        .str-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            pointer-events: none;
+            background: #9a8060;
+        }
+
+        /* Note dots */
+        .dot {
+            position: relative;
+            z-index: 2;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+            line-height: 1;
+            cursor: default;
+        }
+        .dot.scale-note {
+            background: #2176ae;
+            box-shadow: 0 2px 6px rgba(33,118,174,0.5);
+        }
+        .dot.root-note {
+            background: #c0392b;
+            box-shadow: 0 2px 8px rgba(192,57,43,0.6);
+        }
+
+        /* Free mode: interactive dots */
+        .fret-cell.free-mode, .nut-area.free-mode {
+            cursor: pointer;
+        }
+        .fret-cell.free-mode:hover .str-line,
+        .nut-area.free-mode:hover .str-line {
+            opacity: 0.6;
+        }
+
+        /* Fret numbers */
+        .fret-nums {
+            display: flex;
+            background: #fff;
+            border-radius: 0 0 10px 10px;
+            border: 2px solid #c8a96e;
+            border-top: none;
+            min-width: 1080px;
+            padding: 4px 0;
+        }
+        .fnum-spacer {
+            width: 70px;
+            flex-shrink: 0;
+        }
+        .fnum {
+            flex: 1;
+            min-width: 46px;
+            text-align: center;
+            font-size: 12px;
+            color: #aaa;
+            padding: 3px 0;
+        }
+        .fnum.marker {
+            color: #8B5E3C;
+            font-weight: 700;
+        }
+
+        /* ====== Legend ====== */
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 12px;
+            font-size: 0.9rem;
+            color: #888;
+            flex-wrap: wrap;
+        }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .leg-dot { width: 14px; height: 14px; border-radius: 50%; }
+
+        /* ====== Memo ====== */
+        .memo-area {
+            margin-top: 12px;
+        }
+        .memo-input {
+            width: 100%;
+            min-height: 70px;
+            padding: 10px 14px;
+            border: 1.5px solid #ddd;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            color: #333;
+            background: #fff;
+            resize: vertical;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .memo-input:focus {
+            outline: none;
+            border-color: #2176ae;
+        }
+
+        /* ====== Print styles ====== */
+        @media print {
+            @page { size: landscape; margin: 10mm; }
+
+            body {
+                background: #fff;
+                padding: 4px;
+            }
+            header .mode-tabs,
+            header .print-btn,
+            .controls,
+            .free-controls,
+            .panel:not(.active),
+            .legend { display: none !important; }
+
+            .memo-area { margin-top: 8px; }
+            .memo-input {
+                border: 1px solid #999;
+                min-height: unset;
+                resize: none;
+                font-size: 0.9rem;
+            }
+
+            .scale-bar { margin-bottom: 6px; }
+            .fb-wrap { overflow: visible; }
+
+            .fretboard {
+                min-width: unset;
+                width: 100%;
+                border-radius: 4px 4px 0 0;
+                border: 1.5px solid #888;
+                background: #fff !important;
+            }
+            .fret-nums {
+                min-width: unset;
+                width: 100%;
+                border-radius: 0 0 4px 4px;
+                border: 1.5px solid #888;
+            }
+
+            /* 弦の線をはっきり表示 */
+            .str-line {
+                background: #333 !important;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+
+            /* フレットの縦線をはっきり表示 */
+            .fret-cell {
+                border-right-color: #555 !important;
+            }
+            .nut-area {
+                border-right-color: #222 !important;
+            }
+
+            /* ドットは輪郭＋数字で表示 */
+            .dot {
+                background: #fff !important;
+                border: 2px solid #333;
+                color: #000 !important;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .dot.root-note {
+                border: 3px solid #000;
+                font-weight: 900;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>TSG Guitar Scale Viewer</h1>
+        <div class="mode-tabs">
+            <button class="mode-tab active" data-mode="auto">自動モード</button>
+            <button class="mode-tab" data-mode="free">フリーモード</button>
+        </div>
+        <button class="print-btn" onclick="window.print()">
+            &#128438; 印刷 / PDF保存
+        </button>
+    </header>
+
+    <!-- ===== 自動モード ===== -->
+    <div class="panel active" id="panel-auto">
+
+        <div class="controls">
+            <div class="ctrl-row">
+                <span class="ctrl-label">ルート音</span>
+                <div class="root-btns" id="rootBtns"></div>
+            </div>
+            <div class="ctrl-row">
+                <span class="ctrl-label">スケール</span>
+                <select class="scale-sel" id="scaleSel"></select>
+                <div class="nttn-btns" style="margin-left:12px;">
+                    <button class="nbtn active" data-n="en">英語</button>
+                    <button class="nbtn" data-n="sol">ドレミ</button>
+                    <button class="nbtn" data-n="deg">度数</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="scale-bar">
+            <div class="stitle" id="scaleTitle"></div>
+            <div class="snotes" id="scaleNotes"></div>
+        </div>
+
+        <div class="fb-wrap">
+            <div class="fretboard" id="fretboard-auto"></div>
+            <div class="fret-nums" id="fretNums-auto"></div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="leg-dot" style="background:#c0392b"></div>
+                <span>ルート音</span>
+            </div>
+            <div class="legend-item">
+                <div class="leg-dot" style="background:#2176ae"></div>
+                <span>スケール音</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ===== フリーモード ===== -->
+    <div class="panel" id="panel-free">
+
+        <div class="controls">
+            <div class="ctrl-row">
+                <span class="ctrl-label">ルート音</span>
+                <div class="root-btns" id="freeRootBtns"></div>
+            </div>
+            <div class="ctrl-row">
+                <span class="ctrl-label">スケール</span>
+                <select class="scale-sel" id="freeScaleSel"></select>
+                <input class="fret-input" id="fretFrom" type="number" min="0" max="22" value="0">
+                <span class="fret-sep">〜</span>
+                <input class="fret-input" id="fretTo" type="number" min="0" max="22" value="22">
+                <span class="fret-sep">フレット</span>
+                <button class="load-btn" id="loadBtn">▶ 読み込む</button>
+                <div class="nttn-btns" style="margin-left:12px;">
+                    <button class="nbtn active" data-fn="en">英語</button>
+                    <button class="nbtn" data-fn="sol">ドレミ</button>
+                    <button class="nbtn" data-fn="deg">度数</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="free-controls">
+            <span class="ctrl-label">ドット色</span>
+            <div class="color-btns" id="colorBtns"></div>
+            <div style="margin-left:auto;display:flex;gap:6px;">
+                <button class="play-btn" id="playBtn">▶ 再生</button>
+                <button class="stop-btn" id="stopBtn" disabled>■ 停止</button>
+                <button class="clear-btn" id="clearBtn">全消去</button>
+            </div>
+        </div>
+
+        <div class="fb-wrap">
+            <div class="fretboard" id="fretboard-free"></div>
+            <div class="fret-nums" id="fretNums-free"></div>
+        </div>
+
+        <div class="legend">
+            <span style="font-size:0.75rem;color:#888;">タップでドットを置く・消す</span>
+        </div>
+
+        <div class="memo-area">
+            <textarea id="memoText" class="memo-input" placeholder="メモ（印刷時にも表示されます）"></textarea>
+        </div>
+
+    </div>
+
+    <script>
+    // ── 音名データ ──
+    const EN  = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+    const SOL = ['ド','ド♯','レ','レ♯','ミ','ファ','ファ♯','ソ','ソ♯','ラ','ラ♯','シ'];
+
+    // ── 標準チューニング ──
+    const OPEN_PITCHES = [4, 9, 2, 7, 11, 4]; // E A D G B e
+    const STR_NAMES    = ['E','A','D','G','B','E'];
+    const STR_THICK    = [3.0, 2.5, 2.0, 1.5, 1.2, 1.0];
+
+    const FRET_MAX   = 22;
+    const MARKER_FRETS = new Set([3,5,7,9,12,15,17,19,21]);
+    const DOUBLE_FRETS = new Set([12]);
+
+    // ── スケール定義 ──
+    const SCALES = {
+        'メジャー':               { i:[0,2,4,5,7,9,11],    d:['1','2','3','4','5','6','7'] },
+        'ナチュラルマイナー':     { i:[0,2,3,5,7,8,10],    d:['1','2','♭3','4','5','♭6','♭7'] },
+        'メジャーペンタトニック': { i:[0,2,4,7,9],          d:['1','2','3','5','6'] },
+        'マイナーペンタトニック': { i:[0,3,5,7,10],         d:['1','♭3','4','5','♭7'] },
+        'ブルース':               { i:[0,3,5,6,7,10],       d:['1','♭3','4','♭5','5','♭7'] },
+        'ミクソリディアン':       { i:[0,2,4,5,7,9,10],    d:['1','2','3','4','5','6','♭7'] },
+        'ドリアン':               { i:[0,2,3,5,7,9,10],    d:['1','2','♭3','4','5','6','♭7'] },
+        'フリジアン':             { i:[0,1,3,5,7,8,10],    d:['1','♭2','♭3','4','5','♭6','♭7'] },
+        'リディアン':             { i:[0,2,4,6,7,9,11],    d:['1','2','3','♯4','5','6','7'] },
+        'ロクリアン':             { i:[0,1,3,5,6,8,10],    d:['1','♭2','♭3','4','♭5','♭6','♭7'] },
+        'ハーモニックマイナー':   { i:[0,2,3,5,7,8,11],    d:['1','2','♭3','4','5','♭6','7'] },
+        'メロディックマイナー':   { i:[0,2,3,5,7,9,11],    d:['1','2','♭3','4','5','6','7'] },
+        'ホールトーン':           { i:[0,2,4,6,8,10],      d:['1','2','3','♯4','♯5','♭7'] },
+        'ディミニッシュ(HW)':     { i:[0,1,3,4,6,7,9,10],  d:['1','♭2','♭3','3','♭5','5','6','♭7'] },
+        'ディミニッシュ(WH)':     { i:[0,2,3,5,6,8,9,11],  d:['1','2','♭3','4','♭5','♭6','6','7'] },
+        'リディアンドミナント7th': { i:[0,2,4,6,7,9,10],    d:['1','2','3','♯4','5','6','♭7'] },
+        'オルタード':             { i:[0,1,3,4,6,8,10],    d:['1','♭2','♭3','♭4','♭5','♭6','♭7'] },
+    };
+
+    // ── 自動モード状態 ──
+    let root      = 0;
+    let scaleName = 'メジャー';
+    let notation  = 'en';
+
+    // ── フリーモード状態 ──
+    const FREE_COLORS = ['#c0392b','#2176ae','#27ae60','#e67e22','#8e44ad'];
+    const COLOR_LABELS = ['赤','青','緑','橙','紫'];
+    let freeColor = FREE_COLORS[0];
+    // freeDots[string][fret] = color or null
+    const freeDots = Array.from({length: 6}, () => Array(FRET_MAX + 1).fill(null));
+
+    // ── モード切替 ──
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+        tab.onclick = () => {
+            document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const mode = tab.dataset.mode;
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('panel-' + mode).classList.add('active');
+        };
+    });
+
+    // ── ルート音ボタン ──
+    const rootBtnsEl = document.getElementById('rootBtns');
+    EN.forEach((n, i) => {
+        const b = document.createElement('button');
+        b.className = 'rbtn' + (i === 0 ? ' active' : '');
+        b.textContent = n;
+        b.onclick = () => {
+            root = i;
+            document.querySelectorAll('.rbtn').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            renderAuto();
+        };
+        rootBtnsEl.appendChild(b);
+    });
+
+    // ── スケール選択 ──
+    const scaleSelEl = document.getElementById('scaleSel');
+    Object.keys(SCALES).forEach(name => {
+        const o = document.createElement('option');
+        o.value = o.textContent = name;
+        if (name === scaleName) o.selected = true;
+        scaleSelEl.appendChild(o);
+    });
+    scaleSelEl.onchange = () => { scaleName = scaleSelEl.value; renderAuto(); };
+
+    // ── 音名切替 ──
+    document.querySelectorAll('[data-n]').forEach(b => {
+        b.onclick = () => {
+            notation = b.dataset.n;
+            document.querySelectorAll('[data-n]').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            renderAuto();
+        };
+    });
+
+    // ── フリーモード: ルート音ボタン ──
+    let freeRoot = 0;
+    const freeRootBtnsEl = document.getElementById('freeRootBtns');
+    EN.forEach((n, i) => {
+        const b = document.createElement('button');
+        b.className = 'rbtn' + (i === 0 ? ' active' : '');
+        b.textContent = n;
+        b.onclick = () => {
+            freeRoot = i;
+            document.querySelectorAll('#freeRootBtns .rbtn').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+        };
+        freeRootBtnsEl.appendChild(b);
+    });
+
+    // ── フリーモード: スケール選択 ──
+    let freeScaleName = 'メジャー';
+    const freeScaleSelEl = document.getElementById('freeScaleSel');
+    Object.keys(SCALES).forEach(name => {
+        const o = document.createElement('option');
+        o.value = o.textContent = name;
+        if (name === freeScaleName) o.selected = true;
+        freeScaleSelEl.appendChild(o);
+    });
+    freeScaleSelEl.onchange = () => { freeScaleName = freeScaleSelEl.value; };
+
+    // ── フリーモード: 音名表記切替 ──
+    let freeNotation = 'en';
+    document.querySelectorAll('[data-fn]').forEach(b => {
+        b.onclick = () => {
+            freeNotation = b.dataset.fn;
+            document.querySelectorAll('[data-fn]').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            renderFree();
+        };
+    });
+
+    // ── フリーモード: 読み込みボタン ──
+    document.getElementById('loadBtn').onclick = () => {
+        const scale = SCALES[freeScaleName];
+        const intervals = scale.i;
+        const fromFret = parseInt(document.getElementById('fretFrom').value) || 0;
+        const toFret   = parseInt(document.getElementById('fretTo').value)   || FRET_MAX;
+        const lo = Math.min(fromFret, toFret);
+        const hi = Math.max(fromFret, toFret);
+
+        for (let s = 0; s < 6; s++) {
+            for (let f = 0; f <= FRET_MAX; f++) {
+                if (f < lo || f > hi) {
+                    freeDots[s][f] = null;
+                    continue;
+                }
+                const pitch = (OPEN_PITCHES[s] + f) % 12;
+                const interval = ((pitch - freeRoot) % 12 + 12) % 12;
+                if (intervals.includes(interval)) {
+                    freeDots[s][f] = interval === 0 ? FREE_COLORS[0] : FREE_COLORS[1];
+                } else {
+                    freeDots[s][f] = null;
+                }
+            }
+        }
+        renderFree();
+    };
+
+    // ── フリーモード: カラーボタン ──
+    const colorBtnsEl = document.getElementById('colorBtns');
+    FREE_COLORS.forEach((color, i) => {
+        const b = document.createElement('button');
+        b.className = 'cbtn' + (i === 0 ? ' active' : '');
+        b.style.background = color;
+        b.title = COLOR_LABELS[i];
+        b.onclick = () => {
+            freeColor = color;
+            document.querySelectorAll('.cbtn').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+        };
+        colorBtnsEl.appendChild(b);
+    });
+
+    // ── フリーモード: 全消去 ──
+    document.getElementById('clearBtn').onclick = () => {
+        for (let s = 0; s < 6; s++) freeDots[s].fill(null);
+        renderFree();
+    };
+
+    // ── 自動モード: ラベル取得 ──
+    function getLabel(pitch, intervals, degrees) {
+        const interval = ((pitch - root) % 12 + 12) % 12;
+        const idx = intervals.indexOf(interval);
+        if (idx === -1) return null;
+        if (notation === 'en')  return EN[pitch];
+        if (notation === 'sol') return SOL[pitch];
+        return degrees[idx];
+    }
+
+    // ── フレット番号行を作る共通関数 ──
+    function buildFretNums(el) {
+        el.innerHTML = '';
+        const spacer = document.createElement('div');
+        spacer.className = 'fnum-spacer';
+        el.appendChild(spacer);
+
+        const f0 = document.createElement('div');
+        f0.style.cssText = 'width:38px;flex-shrink:0;text-align:center;font-size:12px;color:#bbb;padding:3px 0;';
+        f0.textContent = '0';
+        el.appendChild(f0);
+
+        for (let f = 1; f <= FRET_MAX; f++) {
+            const d = document.createElement('div');
+            const isMark = MARKER_FRETS.has(f);
+            d.className = 'fnum' + (isMark ? ' marker' : '');
+            d.textContent = f + (DOUBLE_FRETS.has(f) ? ' ◆◆' : isMark ? ' ◆' : '');
+            el.appendChild(d);
+        }
+    }
+
+    // ── 自動モード描画 ──
+    function renderAuto() {
+        const scale = SCALES[scaleName];
+        const { i: intervals, d: degrees } = scale;
+
+        const rootName      = EN[root];
+        const scaleNoteList = intervals.map(iv => EN[(root + iv) % 12]);
+        document.getElementById('scaleTitle').textContent = `${rootName}  ${scaleName}`;
+        document.getElementById('scaleNotes').textContent = '構成音:  ' + scaleNoteList.join('  —  ');
+
+        const fb = document.getElementById('fretboard-auto');
+        fb.innerHTML = '';
+
+        for (let s = 5; s >= 0; s--) {
+            const row = document.createElement('div');
+            row.className = 'str-row';
+
+            const lbl = document.createElement('div');
+            lbl.className = 'str-label';
+            lbl.textContent = STR_NAMES[s];
+            row.appendChild(lbl);
+
+            // 開放弦
+            row.appendChild(makeAutoCell(OPEN_PITCHES[s], intervals, degrees, STR_THICK[s], true, 0));
+
+            for (let f = 1; f <= FRET_MAX; f++) {
+                const pitch = (OPEN_PITCHES[s] + f) % 12;
+                row.appendChild(makeAutoCell(pitch, intervals, degrees, STR_THICK[s], false, f));
+            }
+
+            fb.appendChild(row);
+        }
+
+        buildFretNums(document.getElementById('fretNums-auto'));
+    }
+
+    function makeAutoCell(pitch, intervals, degrees, thick, isOpen, fret) {
+        const cell = document.createElement('div');
+        cell.className = isOpen ? 'nut-area' : 'fret-cell';
+        if (!isOpen && MARKER_FRETS.has(fret) && !DOUBLE_FRETS.has(fret)) cell.classList.add('has-marker');
+
+        const line = document.createElement('div');
+        line.className = 'str-line';
+        line.style.height = thick + 'px';
+        line.style.top = `calc(50% - ${thick / 2}px)`;
+        cell.appendChild(line);
+
+        const label = getLabel(pitch, intervals, degrees);
+        if (label !== null) {
+            const interval = ((pitch - root) % 12 + 12) % 12;
+            const dot = document.createElement('div');
+            dot.className = 'dot ' + (interval === 0 ? 'root-note' : 'scale-note');
+            dot.textContent = label;
+            if (notation === 'deg') dot.style.fontSize = '16px';
+            cell.appendChild(dot);
+        }
+
+        return cell;
+    }
+
+    // ── フリーモード描画 ──
+    function renderFree() {
+        const fb = document.getElementById('fretboard-free');
+        fb.innerHTML = '';
+
+        for (let s = 5; s >= 0; s--) {
+            const row = document.createElement('div');
+            row.className = 'str-row';
+
+            const lbl = document.createElement('div');
+            lbl.className = 'str-label';
+            lbl.textContent = STR_NAMES[s];
+            row.appendChild(lbl);
+
+            for (let f = 0; f <= FRET_MAX; f++) {
+                row.appendChild(makeFreeCell(s, f));
+            }
+
+            fb.appendChild(row);
+        }
+
+        buildFretNums(document.getElementById('fretNums-free'));
+    }
+
+    function makeFreeCell(s, f) {
+        const isOpen = f === 0;
+        const cell = document.createElement('div');
+        cell.className = (isOpen ? 'nut-area' : 'fret-cell') + ' free-mode';
+        if (!isOpen && MARKER_FRETS.has(f) && !DOUBLE_FRETS.has(f)) cell.classList.add('has-marker');
+
+        const line = document.createElement('div');
+        line.className = 'str-line';
+        line.style.height = STR_THICK[s] + 'px';
+        line.style.top = `calc(50% - ${STR_THICK[s] / 2}px)`;
+        cell.appendChild(line);
+
+        const color = freeDots[s][f];
+        if (color) {
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.style.background = color;
+            dot.style.boxShadow = `0 2px 6px ${color}88`;
+
+            const pitch = (OPEN_PITCHES[s] + f) % 12;
+            const interval = ((pitch - freeRoot) % 12 + 12) % 12;
+            const scale = SCALES[freeScaleName];
+            const idx = scale.i.indexOf(interval);
+            const CHROMATIC_DEG = ['1','♭2','2','♭3','3','4','♭5','5','♭6','6','♭7','7'];
+            if (freeNotation === 'en') {
+                dot.textContent = EN[pitch];
+            } else if (freeNotation === 'sol') {
+                dot.textContent = SOL[pitch];
+            } else {
+                dot.textContent = idx !== -1 ? scale.d[idx] : CHROMATIC_DEG[interval];
+            }
+            if (freeNotation === 'deg') dot.style.fontSize = '16px';
+
+            cell.appendChild(dot);
+        }
+
+        cell.onclick = () => {
+            freeDots[s][f] = freeDots[s][f] ? null : freeColor;
+            renderFree();
+        };
+
+        return cell;
+    }
+
+    // ── 音声再生 ──
+    // 各弦の開放弦MIDIノート番号（低Eから高E）
+    const OPEN_MIDI = [40, 45, 50, 55, 59, 64];
+
+    let audioCtx = null;
+    let playTimeouts = [];
+    let isPlaying = false;
+
+    function midiToFreq(midi) {
+        return 440 * Math.pow(2, (midi - 69) / 12);
+    }
+
+    function pluckNote(freq, startTime) {
+        const sampleRate = audioCtx.sampleRate;
+        const duration = 2.5;
+        const totalSamples = Math.floor(sampleRate * duration);
+        const delayLen = Math.max(2, Math.round(sampleRate / freq));
+
+        // Karplus-Strong: ノイズバーストを遅延ループ＋平均フィルターで自然減衰
+        const delayLine = new Float32Array(delayLen);
+        for (let i = 0; i < delayLen; i++) delayLine[i] = Math.random() * 2 - 1;
+
+        const output = new Float32Array(totalSamples);
+        let pos = 0;
+        for (let i = 0; i < totalSamples; i++) {
+            const next = (pos + 1) % delayLen;
+            output[i] = delayLine[pos];
+            delayLine[pos] = (delayLine[pos] + delayLine[next]) * 0.498;
+            pos = next;
+        }
+
+        const buf = audioCtx.createBuffer(1, totalSamples, sampleRate);
+        buf.getChannelData(0).set(output);
+
+        const src = audioCtx.createBufferSource();
+        src.buffer = buf;
+
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.7, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+        src.connect(gain);
+        gain.connect(audioCtx.destination);
+        src.start(startTime);
+        src.stop(startTime + duration);
+    }
+
+    function collectNotes() {
+        const notes = [];
+        for (let s = 0; s < 6; s++) {
+            for (let f = 0; f <= FRET_MAX; f++) {
+                if (freeDots[s][f]) {
+                    notes.push(OPEN_MIDI[s] + f);
+                }
+            }
+        }
+        const unique = [...new Set(notes)].sort((a, b) => a - b);
+        // ルート音のピッチクラス（freeRootに対応するMIDI mod 12）
+        const rootPc = freeRoot;
+        // ルート音と同じピッチクラスの最低音を先頭に、以降は昇順
+        const rootIdx = unique.findIndex(m => m % 12 === rootPc);
+        if (rootIdx <= 0) return unique;
+        // ルート音より低い音は除外し、ルート音から昇順に再生
+        return unique.slice(rootIdx);
+    }
+
+    document.getElementById('playBtn').onclick = () => {
+        if (isPlaying) return;
+        const notes = collectNotes();
+        if (notes.length === 0) return;
+
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        isPlaying = true;
+        document.getElementById('playBtn').disabled = true;
+        document.getElementById('stopBtn').disabled = false;
+
+        const interval = 0.42; // 音と音の間隔（秒）
+        const now = audioCtx.currentTime + 0.05;
+        notes.forEach((midi, i) => {
+            pluckNote(midiToFreq(midi), now + i * interval);
+        });
+
+        // 最後の音が終わったら停止状態に戻す
+        const totalTime = (notes.length * interval + 2.5) * 1000;
+        playTimeouts.push(setTimeout(() => stopPlay(), totalTime));
+    };
+
+    document.getElementById('stopBtn').onclick = () => stopPlay();
+
+    function stopPlay() {
+        playTimeouts.forEach(t => clearTimeout(t));
+        playTimeouts = [];
+        isPlaying = false;
+        document.getElementById('playBtn').disabled = false;
+        document.getElementById('stopBtn').disabled = true;
+        // AudioContextを再生成して途中の音を止める
+        if (audioCtx) { audioCtx.close(); audioCtx = null; }
+    }
+
+    // ── 初期描画 ──
+    renderAuto();
+    // フリーモード初期値: フレット4〜8のメジャースケールを読み込んだ状態
+    document.getElementById('fretFrom').value = 4;
+    document.getElementById('fretTo').value = 8;
+    document.getElementById('loadBtn').click();
+    </script>
+</body>
+</html>
