@@ -531,6 +531,93 @@
             border-color: #2176ae;
         }
 
+        /* ====== Help button ====== */
+        .help-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 2px solid #2176ae;
+            background: #fff;
+            color: #2176ae;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: 0.12s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .help-btn:hover { background: #2176ae; color: #fff; }
+
+        /* ====== Help modal ====== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 480px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .modal-header h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: #f0f2f5;
+            font-size: 1rem;
+            cursor: pointer;
+            color: #555;
+        }
+        .modal h3 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #2176ae;
+            margin: 14px 0 6px;
+            padding-bottom: 4px;
+            border-bottom: 1.5px solid #e0e8f0;
+        }
+        .modal ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .modal ul li {
+            font-size: 0.88rem;
+            color: #444;
+            line-height: 1.5;
+            padding-left: 1em;
+            text-indent: -1em;
+        }
+        .modal ul li::before {
+            content: '▸ ';
+            color: #2176ae;
+        }
+
         /* ====== Print styles ====== */
         @media print {
             @page { size: landscape; margin: 10mm; }
@@ -613,10 +700,44 @@
             <button class="disp-tab active" data-disp="full">フル</button>
             <button class="disp-tab" data-disp="compact">縮小版</button>
         </div>
+        <button class="help-btn" id="helpBtn">?</button>
         <button class="print-btn" onclick="window.print()">
             &#128438; 印刷 / PDF保存
         </button>
     </header>
+
+    <!-- ===== ヘルプモーダル ===== -->
+    <div class="modal-overlay" id="helpModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>📖 使い方ガイド</h2>
+                <button class="modal-close" id="helpClose">✕</button>
+            </div>
+
+            <h3>自動モード</h3>
+            <ul>
+                <li>ルート音とスケールを選ぶと、フレットボード上に音が自動表示される</li>
+                <li>♭ボタンでルート音をフラット表記（D♭、E♭など）に切り替え</li>
+                <li>英語 / ドレミ / 度数で音名表記を変更できる</li>
+            </ul>
+
+            <h3>フリーモード</h3>
+            <ul>
+                <li>フレットをタップしてドットを置く・もう一度タップで消す</li>
+                <li>スケールと範囲を指定して「読み込む」で自動配置できる</li>
+                <li>ドット色は5色から選択可能（複数のスケールを重ねて比較できる）</li>
+                <li>「再生」でルート音から順番にスケールの音が鳴る</li>
+                <li>「全消去」でフレットボードをリセット</li>
+                <li>メモ欄のテキストは印刷時にも表示される</li>
+            </ul>
+
+            <h3>共通</h3>
+            <ul>
+                <li>「フル / 縮小版」でフレット表示数を切り替え（スマホでは縮小版推奨）</li>
+                <li>「印刷 / PDF保存」で横向きレイアウトで印刷・PDF化できる</li>
+            </ul>
+        </div>
+    </div>
 
     <!-- ===== 自動モード ===== -->
     <div class="panel active" id="panel-auto">
@@ -1184,6 +1305,13 @@
         // AudioContextを再生成して途中の音を止める
         if (audioCtx) { audioCtx.close(); audioCtx = null; }
     }
+
+    // ── 初期描画 ──
+    // ── ヘルプモーダル ──
+    const helpModal = document.getElementById('helpModal');
+    document.getElementById('helpBtn').onclick  = () => helpModal.classList.add('open');
+    document.getElementById('helpClose').onclick = () => helpModal.classList.remove('open');
+    helpModal.onclick = (e) => { if (e.target === helpModal) helpModal.classList.remove('open'); };
 
     // ── 初期描画 ──
     renderAuto();
