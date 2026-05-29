@@ -113,6 +113,25 @@
 
         .root-btns { display: flex; gap: 4px; flex-wrap: wrap; }
 
+        .acc-toggle {
+            padding: 7px 12px;
+            border: 1.5px solid #ddd;
+            background: #f7f8fa;
+            color: #555;
+            border-radius: 7px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.12s;
+            flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .acc-toggle.flat-mode {
+            background: #2176ae;
+            border-color: #2176ae;
+            color: #fff;
+        }
+
         .rbtn {
             width: 44px;
             height: 42px;
@@ -606,6 +625,7 @@
             <div class="ctrl-row">
                 <span class="ctrl-label">ルート音</span>
                 <div class="root-btns" id="rootBtns"></div>
+                <button class="acc-toggle" id="accToggleAuto">♭</button>
             </div>
             <div class="ctrl-row">
                 <span class="ctrl-label">スケール</span>
@@ -648,6 +668,7 @@
             <div class="ctrl-row">
                 <span class="ctrl-label">ルート音</span>
                 <div class="root-btns" id="freeRootBtns"></div>
+                <button class="acc-toggle" id="accToggleFree">♭</button>
             </div>
             <div class="ctrl-row">
                 <span class="ctrl-label">スケール</span>
@@ -692,8 +713,13 @@
 
     <script>
     // ── 音名データ ──
-    const EN  = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-    const SOL = ['ド','ド♯','レ','レ♯','ミ','ファ','ファ♯','ソ','ソ♯','ラ','ラ♯','シ'];
+    const EN   = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+    const EN_F = ['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
+    const SOL  = ['ド','ド♯','レ','レ♯','ミ','ファ','ファ♯','ソ','ソ♯','ラ','ラ♯','シ'];
+
+    // ── ルート音表記（♯/♭切り替え）──
+    let useFlat = false;
+    function rootNames() { return useFlat ? EN_F : EN; }
 
     // ── 標準チューニング ──
     const OPEN_PITCHES = [4, 9, 2, 7, 11, 4]; // E A D G B e
@@ -761,20 +787,39 @@
         };
     });
 
-    // ── ルート音ボタン ──
+    // ── ルート音ボタン（♯/♭共通関数）──
+    function buildRootBtns(containerEl, onSelect) {
+        containerEl.innerHTML = '';
+        rootNames().forEach((n, i) => {
+            const b = document.createElement('button');
+            b.className = 'rbtn' + (i === 0 ? ' active' : '');
+            b.textContent = n;
+            b.onclick = () => {
+                onSelect(i);
+                containerEl.querySelectorAll('.rbtn').forEach(x => x.classList.remove('active'));
+                b.classList.add('active');
+            };
+            containerEl.appendChild(b);
+        });
+    }
+
     const rootBtnsEl = document.getElementById('rootBtns');
-    EN.forEach((n, i) => {
-        const b = document.createElement('button');
-        b.className = 'rbtn' + (i === 0 ? ' active' : '');
-        b.textContent = n;
-        b.onclick = () => {
-            root = i;
-            document.querySelectorAll('.rbtn').forEach(x => x.classList.remove('active'));
-            b.classList.add('active');
-            renderAuto();
-        };
-        rootBtnsEl.appendChild(b);
-    });
+    buildRootBtns(rootBtnsEl, (i) => { root = i; renderAuto(); });
+
+    // ── ♯/♭ 切り替え（両モード共通）──
+    function applyAccToggle() {
+        ['accToggleAuto','accToggleFree'].forEach(id => {
+            const btn = document.getElementById(id);
+            btn.classList.toggle('flat-mode', useFlat);
+            btn.textContent = useFlat ? '♯' : '♭';
+        });
+        buildRootBtns(rootBtnsEl, (i) => { root = i; renderAuto(); });
+        rootBtnsEl.querySelectorAll('.rbtn')[root].classList.add('active');
+        buildRootBtns(freeRootBtnsEl, (i) => { freeRoot = i; });
+        freeRootBtnsEl.querySelectorAll('.rbtn')[freeRoot].classList.add('active');
+    }
+    document.getElementById('accToggleAuto').onclick = () => { useFlat = !useFlat; applyAccToggle(); };
+    document.getElementById('accToggleFree').onclick = () => { useFlat = !useFlat; applyAccToggle(); };
 
     // ── スケール選択 ──
     const scaleSelEl = document.getElementById('scaleSel');
@@ -799,17 +844,8 @@
     // ── フリーモード: ルート音ボタン ──
     let freeRoot = 0;
     const freeRootBtnsEl = document.getElementById('freeRootBtns');
-    EN.forEach((n, i) => {
-        const b = document.createElement('button');
-        b.className = 'rbtn' + (i === 0 ? ' active' : '');
-        b.textContent = n;
-        b.onclick = () => {
-            freeRoot = i;
-            document.querySelectorAll('#freeRootBtns .rbtn').forEach(x => x.classList.remove('active'));
-            b.classList.add('active');
-        };
-        freeRootBtnsEl.appendChild(b);
-    });
+    buildRootBtns(freeRootBtnsEl, (i) => { freeRoot = i; });
+
 
     // ── フリーモード: スケール選択 ──
     let freeScaleName = 'メジャー';
