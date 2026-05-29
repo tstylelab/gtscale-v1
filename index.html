@@ -289,6 +289,32 @@
         }
         .clear-btn:hover { background: #e5e8ee; }
 
+        /* ====== Display mode toggle ====== */
+        .disp-tabs {
+            display: flex;
+            background: #e0e3ea;
+            border-radius: 8px;
+            padding: 3px;
+            gap: 2px;
+        }
+        .disp-tab {
+            padding: 7px 16px;
+            border: none;
+            background: transparent;
+            color: #666;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .disp-tab.active {
+            background: #fff;
+            color: #1a1a2e;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+        }
+
         /* ====== Fretboard shared ====== */
         .fb-wrap {
             overflow-x: auto;
@@ -305,11 +331,17 @@
             border-bottom: none;
             position: relative;
         }
+        .fretboard.compact {
+            min-width: unset;
+        }
 
         .str-row {
             display: flex;
             align-items: center;
             height: 58px;
+        }
+        .compact .str-row {
+            height: 46px;
         }
 
         .str-label {
@@ -343,6 +375,13 @@
             border-right: 2px solid #a09070;
         }
         .fret-cell:last-child { border-right: none; }
+        .compact .fret-cell {
+            min-width: 28px;
+            height: 46px;
+        }
+        .compact .nut-area {
+            height: 46px;
+        }
 
         /* Position marker dots on fretboard */
         .fret-cell.has-marker::after {
@@ -382,6 +421,11 @@
             flex-shrink: 0;
             line-height: 1;
             cursor: default;
+        }
+        .compact .dot {
+            width: 24px;
+            height: 24px;
+            font-size: 9px;
         }
         .dot.scale-note {
             background: #2176ae;
@@ -423,6 +467,11 @@
             color: #aaa;
             padding: 3px 0;
         }
+        .compact-nums .fnum {
+            min-width: 28px;
+            font-size: 10px;
+        }
+        .compact-nums { min-width: unset; }
         .fnum.marker {
             color: #8B5E3C;
             font-weight: 700;
@@ -540,6 +589,10 @@
         <div class="mode-tabs">
             <button class="mode-tab active" data-mode="auto">自動モード</button>
             <button class="mode-tab" data-mode="free">フリーモード</button>
+        </div>
+        <div class="disp-tabs">
+            <button class="disp-tab active" data-disp="full">フル</button>
+            <button class="disp-tab" data-disp="compact">12フレット</button>
         </div>
         <button class="print-btn" onclick="window.print()">
             &#128438; 印刷 / PDF保存
@@ -671,6 +724,19 @@
         'リディアンドミナント7th': { i:[0,2,4,6,7,9,10],    d:['1','2','3','♯4','5','6','♭7'] },
         'オルタード':             { i:[0,1,3,4,6,8,10],    d:['1','♭2','♭3','♭4','♭5','♭6','♭7'] },
     };
+
+    // ── 表示フレット数 ──
+    let dispFrets = FRET_MAX; // フル=22 / コンパクト=12
+
+    document.querySelectorAll('.disp-tab').forEach(b => {
+        b.onclick = () => {
+            document.querySelectorAll('.disp-tab').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            dispFrets = b.dataset.disp === 'compact' ? 12 : FRET_MAX;
+            renderAuto();
+            renderFree();
+        };
+    });
 
     // ── 自動モード状態 ──
     let root      = 0;
@@ -826,7 +892,7 @@
     }
 
     // ── フレット番号行を作る共通関数 ──
-    function buildFretNums(el) {
+    function buildFretNums(el, maxFret = FRET_MAX) {
         el.innerHTML = '';
         const spacer = document.createElement('div');
         spacer.className = 'fnum-spacer';
@@ -837,7 +903,7 @@
         f0.textContent = '0';
         el.appendChild(f0);
 
-        for (let f = 1; f <= FRET_MAX; f++) {
+        for (let f = 1; f <= maxFret; f++) {
             const d = document.createElement('div');
             const isMark = MARKER_FRETS.has(f);
             d.className = 'fnum' + (isMark ? ' marker' : '');
@@ -858,6 +924,8 @@
 
         const fb = document.getElementById('fretboard-auto');
         fb.innerHTML = '';
+        const isCompact = dispFrets === 12;
+        if (isCompact) fb.classList.add('compact'); else fb.classList.remove('compact');
 
         for (let s = 5; s >= 0; s--) {
             const row = document.createElement('div');
@@ -871,7 +939,7 @@
             // 開放弦
             row.appendChild(makeAutoCell(OPEN_PITCHES[s], intervals, degrees, STR_THICK[s], true, 0));
 
-            for (let f = 1; f <= FRET_MAX; f++) {
+            for (let f = 1; f <= dispFrets; f++) {
                 const pitch = (OPEN_PITCHES[s] + f) % 12;
                 row.appendChild(makeAutoCell(pitch, intervals, degrees, STR_THICK[s], false, f));
             }
@@ -879,7 +947,9 @@
             fb.appendChild(row);
         }
 
-        buildFretNums(document.getElementById('fretNums-auto'));
+        const fnEl = document.getElementById('fretNums-auto');
+        buildFretNums(fnEl, dispFrets);
+        if (isCompact) fnEl.classList.add('compact-nums'); else fnEl.classList.remove('compact-nums');
     }
 
     function makeAutoCell(pitch, intervals, degrees, thick, isOpen, fret) {
@@ -910,6 +980,8 @@
     function renderFree() {
         const fb = document.getElementById('fretboard-free');
         fb.innerHTML = '';
+        const isCompact = dispFrets === 12;
+        if (isCompact) fb.classList.add('compact'); else fb.classList.remove('compact');
 
         for (let s = 5; s >= 0; s--) {
             const row = document.createElement('div');
@@ -920,14 +992,16 @@
             lbl.textContent = STR_NAMES[s];
             row.appendChild(lbl);
 
-            for (let f = 0; f <= FRET_MAX; f++) {
+            for (let f = 0; f <= dispFrets; f++) {
                 row.appendChild(makeFreeCell(s, f));
             }
 
             fb.appendChild(row);
         }
 
-        buildFretNums(document.getElementById('fretNums-free'));
+        const fnEl = document.getElementById('fretNums-free');
+        buildFretNums(fnEl, dispFrets);
+        if (isCompact) fnEl.classList.add('compact-nums'); else fnEl.classList.remove('compact-nums');
     }
 
     function makeFreeCell(s, f) {
