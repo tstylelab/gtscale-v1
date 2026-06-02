@@ -684,6 +684,8 @@
                 -webkit-print-color-adjust: exact;
             }
             .dot.root-note {
+                background: #000 !important;
+                color: #fff !important;
                 border: 3px solid #000;
                 font-weight: 900;
             }
@@ -968,6 +970,8 @@
         rootBtnsEl.querySelectorAll('.rbtn')[root].classList.add('active');
         buildRootBtns(freeRootBtnsEl, (i) => { freeRoot = i; });
         freeRootBtnsEl.querySelectorAll('.rbtn')[freeRoot].classList.add('active');
+        renderAuto();
+        renderFree();
     }
     document.getElementById('accToggleAuto').onclick = () => { useFlat = !useFlat; applyAccToggle(); };
     document.getElementById('accToggleFree').onclick = () => { useFlat = !useFlat; applyAccToggle(); };
@@ -1073,7 +1077,7 @@
         const interval = ((pitch - root) % 12 + 12) % 12;
         const idx = intervals.indexOf(interval);
         if (idx === -1) return null;
-        if (notation === 'en')  return EN[pitch];
+        if (notation === 'en')  return (useFlat ? EN_F : EN)[pitch];
         if (notation === 'sol') return SOL[pitch];
         return degrees[idx];
     }
@@ -1104,8 +1108,9 @@
         const scale = SCALES[scaleName];
         const { i: intervals, d: degrees } = scale;
 
-        const rootName      = EN[root];
-        const scaleNoteList = intervals.map(iv => EN[(root + iv) % 12]);
+        const noteNames     = useFlat ? EN_F : EN;
+        const rootName      = noteNames[root];
+        const scaleNoteList = intervals.map(iv => noteNames[(root + iv) % 12]);
         document.getElementById('scaleTitle').textContent = `${rootName}  ${scaleName}`;
         document.getElementById('scaleNotes').textContent = '構成音:  ' + scaleNoteList.join('  —  ');
 
@@ -1241,6 +1246,7 @@
 
     let audioCtx = null;
     let playTimeouts = [];
+    let activeSources = [];
     let isPlaying = false;
 
     function midiToFreq(midi) {
@@ -1280,22 +1286,22 @@
         gain.connect(audioCtx.destination);
         src.start(startTime);
         src.stop(startTime + duration);
+        activeSources.push(src);
     }
 
     function collectNotes() {
         const notes = [];
         for (let s = 0; s < 6; s++) {
-            for (let f = 0; f <= FRET_MAX; f++) {
+            for (let f = 0; f <= dispFrets; f++) {
                 if (freeDots[s][f]) {
                     notes.push(OPEN_MIDI[s] + f);
                 }
             }
         }
         const unique = [...new Set(notes)].sort((a, b) => a - b);
-        // ルート音のピッチクラス（freeRootに対応するMIDI mod 12）
-        const rootPc = freeRoot;
+        if (unique.length === 0) return [];
         // ルート音と同じピッチクラスの最低音を先頭に、以降は昇順
-        const rootIdx = unique.findIndex(m => m % 12 === rootPc);
+        const rootIdx = unique.findIndex(m => m % 12 === freeRoot);
         if (rootIdx <= 0) return unique;
         // ルート音より低い音は除外し、ルート音から昇順に再生
         return unique.slice(rootIdx);
@@ -1319,8 +1325,8 @@
             pluckNote(midiToFreq(midi), now + i * interval);
         });
 
-        // 最後の音が終わったら停止状態に戻す
-        const totalTime = (notes.length * interval + 2.5) * 1000;
+        // 最後の音が終わったら停止状態に戻す（0.05秒オフセット分を加算）
+        const totalTime = (notes.length * interval + 2.5 + 0.05) * 1000;
         playTimeouts.push(setTimeout(() => stopPlay(), totalTime));
     };
 
@@ -1329,10 +1335,12 @@
     function stopPlay() {
         playTimeouts.forEach(t => clearTimeout(t));
         playTimeouts = [];
+        // 再生中のBufferSourceを即座に停止
+        activeSources.forEach(src => { try { src.stop(); } catch(e) {} });
+        activeSources = [];
         isPlaying = false;
         document.getElementById('playBtn').disabled = false;
         document.getElementById('stopBtn').disabled = true;
-        // AudioContextを再生成して途中の音を止める
         if (audioCtx) { audioCtx.close(); audioCtx = null; }
     }
 
