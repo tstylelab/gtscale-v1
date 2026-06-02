@@ -869,6 +869,7 @@
     const EN   = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
     const EN_F = ['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
     const SOL  = ['ド','ド♯','レ','レ♯','ミ','ファ','ファ♯','ソ','ソ♯','ラ','ラ♯','シ'];
+    const SOL_F= ['ド','レ♭','レ','ミ♭','ミ','ファ','ソ♭','ソ','ラ♭','ラ','シ♭','シ'];
 
     // ── ルート音表記（♯/♭切り替え）──
     let useFlat = false;
@@ -1078,7 +1079,7 @@
         const idx = intervals.indexOf(interval);
         if (idx === -1) return null;
         if (notation === 'en')  return (useFlat ? EN_F : EN)[pitch];
-        if (notation === 'sol') return SOL[pitch];
+        if (notation === 'sol') return (useFlat ? SOL_F : SOL)[pitch];
         return degrees[idx];
     }
 
@@ -1221,9 +1222,9 @@
             const idx = scale.i.indexOf(interval);
             const CHROMATIC_DEG = ['1','♭2','2','♭3','3','4','♭5','5','♭6','6','♭7','7'];
             if (freeNotation === 'en') {
-                dot.textContent = EN[pitch];
+                dot.textContent = (useFlat ? EN_F : EN)[pitch];
             } else if (freeNotation === 'sol') {
-                dot.textContent = SOL[pitch];
+                dot.textContent = (useFlat ? SOL_F : SOL)[pitch];
             } else {
                 dot.textContent = idx !== -1 ? scale.d[idx] : CHROMATIC_DEG[interval];
             }
