@@ -661,6 +661,19 @@
             height: auto;
         }
 
+        /* デスクトップ: 横2列 */
+        @media (min-width: 700px) {
+            .tool-banners {
+                flex-direction: row;
+                justify-content: center;
+                align-items: stretch;
+            }
+            .tool-banner-link {
+                width: 44%;
+                max-width: 440px;
+            }
+        }
+
         /* ====== Print styles ====== */
         @media print {
             @page { size: landscape; margin: 10mm; }
