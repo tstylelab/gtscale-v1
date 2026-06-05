@@ -868,6 +868,11 @@
         @media print {
             @page { size: landscape; margin: 10mm; }
 
+            * {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+
             body {
                 background: #fff;
                 padding: 4px;
@@ -878,61 +883,76 @@
             .free-controls,
             .panel:not(.active),
             .legend,
+            .save-dialog,
+            .library-section,
             .tool-banner-section { display: none !important; }
 
             .memo-area { margin-top: 8px; }
             .memo-input {
-                border: 1px solid #999;
+                border: 1px solid #bbb;
                 min-height: unset;
                 resize: none;
                 font-size: 0.9rem;
+                color: #333;
             }
 
             .scale-bar { margin-bottom: 6px; }
             .fb-wrap { overflow: visible; }
 
+            /* フレットボード：薄いベージュ */
             .fretboard {
                 min-width: unset;
                 width: 100%;
                 border-radius: 4px 4px 0 0;
-                border: 1.5px solid #888;
-                background: #fff !important;
+                border: 1.5px solid #c0a878;
+                background: #fdf8f0 !important;
             }
             .fret-nums {
                 min-width: unset;
                 width: 100%;
                 border-radius: 0 0 4px 4px;
-                border: 1.5px solid #888;
+                border: 1.5px solid #c0a878;
+                border-top: none;
             }
 
-            /* 弦の線をはっきり表示 */
+            /* 弦の線 */
             .str-line {
-                background: #333 !important;
-                print-color-adjust: exact;
-                -webkit-print-color-adjust: exact;
+                background: #b0956a !important;
             }
 
-            /* フレットの縦線をはっきり表示 */
+            /* フレット縦線 */
             .fret-cell {
-                border-right-color: #555 !important;
+                border-right-color: #c0a878 !important;
             }
             .nut-area {
-                border-right-color: #222 !important;
+                border-right-color: #8a6a3a !important;
+                border-right-width: 6px !important;
             }
 
-            /* ドットは輪郭＋数字で表示 */
-            .dot {
-                background: #fff !important;
-                border: 2px solid #333;
-                color: #000 !important;
-                print-color-adjust: exact;
-                -webkit-print-color-adjust: exact;
-            }
-            .dot.root-note {
-                background: #000 !important;
+            /* スケール音：薄青 */
+            .dot.scale-note {
+                background: #5b9fd4 !important;
                 color: #fff !important;
-                border: 3px solid #000;
-                font-weight: 900;
+                box-shadow: none !important;
+            }
+
+            /* ルート音：赤 */
+            .dot.root-note {
+                background: #c0392b !important;
+                color: #fff !important;
+                box-shadow: none !important;
+            }
+
+            /* フリーモードの色付きドット：色を薄めに補正 */
+            .dot:not(.scale-note):not(.root-note) {
+                opacity: 0.85;
+                box-shadow: none !important;
+            }
+
+            /* ポジションマーカー */
+            .fret-cell.has-marker::after {
+                background: #c8a870 !important;
+                opacity: 0.8;
             }
         }
     </style>
