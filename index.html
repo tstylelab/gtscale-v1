@@ -21,22 +21,24 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 14px;
+            background: #1a1a2e;
+            margin: -16px -16px 14px;
+            padding: 12px 20px;
             flex-wrap: wrap;
             gap: 10px;
         }
 
         /* ====== Brand title ====== */
         .brand-wrap { display:flex; align-items:flex-end; gap:12px; }
-        .brand-main { font-family:'Oswald',sans-serif; font-size:2.4rem; font-weight:700; color:#1a1a2e; letter-spacing:-0.01em; line-height:1; display:flex; align-items:flex-end; gap:10px; }
+        .brand-main { font-family:'Oswald',sans-serif; font-size:2.4rem; font-weight:700; color:#fff; letter-spacing:-0.01em; line-height:1; display:flex; align-items:flex-end; gap:10px; }
         .brand-right { padding-bottom:3px; border-bottom:2.5px solid #c0392b; }
         .brand-sub1 { font-family:'Oswald',sans-serif; font-size:0.78rem; font-weight:400; letter-spacing:0.22em; color:#c0392b; text-transform:uppercase; line-height:1.25; }
-        .brand-sub2 { font-family:'Oswald',sans-serif; font-size:1.2rem; font-weight:600; letter-spacing:0.12em; color:#1a1a2e; text-transform:uppercase; line-height:1.2; }
+        .brand-sub2 { font-family:'Oswald',sans-serif; font-size:1.2rem; font-weight:600; letter-spacing:0.12em; color:#fff; text-transform:uppercase; line-height:1.2; }
 
         /* ====== Mode tabs ====== */
         .mode-tabs {
             display: flex;
-            background: #e0e3ea;
+            background: rgba(255,255,255,0.12);
             border-radius: 10px;
             padding: 3px;
             gap: 2px;
@@ -46,7 +48,7 @@
             padding: 9px 22px;
             border: none;
             background: transparent;
-            color: #666;
+            color: rgba(255,255,255,0.6);
             border-radius: 8px;
             font-size: 1rem;
             font-weight: 600;
@@ -57,7 +59,7 @@
         .mode-tab.active {
             background: #fff;
             color: #1a1a2e;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
         }
 
         /* ====== Print button ====== */
@@ -66,9 +68,9 @@
             align-items: center;
             gap: 6px;
             padding: 10px 18px;
-            background: #1a1a2e;
+            background: rgba(255,255,255,0.15);
             color: #fff;
-            border: none;
+            border: 1.5px solid rgba(255,255,255,0.3);
             border-radius: 8px;
             font-size: 1rem;
             font-weight: 600;
@@ -76,7 +78,7 @@
             transition: 0.15s;
             -webkit-tap-highlight-color: transparent;
         }
-        .print-btn:hover { background: #2e2e50; }
+        .print-btn:hover { background: rgba(255,255,255,0.25); }
         .print-btn:active { transform: scale(0.97); }
 
         /* ====== Panel (auto / free) ====== */
@@ -310,7 +312,7 @@
         /* ====== Display mode toggle ====== */
         .disp-tabs {
             display: flex;
-            background: #e0e3ea;
+            background: rgba(255,255,255,0.12);
             border-radius: 8px;
             padding: 3px;
             gap: 2px;
@@ -319,7 +321,7 @@
             padding: 7px 16px;
             border: none;
             background: transparent;
-            color: #666;
+            color: rgba(255,255,255,0.6);
             border-radius: 6px;
             font-size: 0.9rem;
             font-weight: 600;
@@ -330,7 +332,7 @@
         .disp-tab.active {
             background: #fff;
             color: #1a1a2e;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
         }
 
         /* ====== Fretboard shared ====== */
@@ -536,9 +538,9 @@
         .help-btn {
             padding: 9px 16px;
             border-radius: 8px;
-            border: 2px solid #2176ae;
-            background: #fff;
-            color: #2176ae;
+            border: 1.5px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.12);
+            color: #fff;
             font-size: 0.95rem;
             font-weight: 700;
             cursor: pointer;
@@ -546,7 +548,7 @@
             transition: 0.12s;
             -webkit-tap-highlight-color: transparent;
         }
-        .help-btn:hover { background: #2176ae; color: #fff; }
+        .help-btn:hover { background: rgba(255,255,255,0.25); }
 
         /* ====== Help modal ====== */
         .modal-overlay {
@@ -618,6 +620,150 @@
             display: block;
             color: #1a1a2e;
             margin-bottom: 2px;
+        }
+
+        /* ====== Save button (free controls) ====== */
+        .save-btn {
+            padding: 9px 16px;
+            background: #7b4fa6;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.12s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .save-btn:hover { background: #623d85; }
+        .save-btn:active { transform: scale(0.97); }
+
+        /* ====== Library section ====== */
+        .library-section {
+            background: #fff;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-top: 14px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+        .library-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .library-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            letter-spacing: 0.04em;
+        }
+        .library-empty {
+            font-size: 0.88rem;
+            color: #aaa;
+            text-align: center;
+            padding: 14px 0;
+        }
+        .library-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .lib-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: #f7f8fa;
+            border-radius: 8px;
+            border: 1.5px solid #e8eaed;
+        }
+        .lib-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .lib-item-name {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .lib-item-meta {
+            font-size: 0.78rem;
+            color: #999;
+            margin-top: 2px;
+        }
+        .lib-load-btn {
+            padding: 7px 14px;
+            background: #2176ae;
+            border: none;
+            border-radius: 7px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.12s;
+            flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .lib-load-btn:hover { background: #1a5f8a; }
+        .lib-del-btn {
+            padding: 7px 10px;
+            background: #f0f2f5;
+            border: 1.5px solid #ddd;
+            border-radius: 7px;
+            font-size: 0.85rem;
+            color: #888;
+            cursor: pointer;
+            transition: 0.12s;
+            flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .lib-del-btn:hover { background: #fde8e8; border-color: #e57373; color: #c0392b; }
+
+        /* ====== Save name dialog (inline) ====== */
+        .save-dialog {
+            display: none;
+            background: #fff;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-top: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            border: 1.5px solid #e0e3ea;
+        }
+        .save-dialog.open { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .save-name-input {
+            flex: 1;
+            min-width: 160px;
+            padding: 8px 12px;
+            border: 1.5px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #333;
+            background: #f7f8fa;
+        }
+        .save-name-input:focus { outline: none; border-color: #7b4fa6; }
+        .save-ok-btn {
+            padding: 8px 18px;
+            background: #7b4fa6;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+        }
+        .save-ok-btn:hover { background: #623d85; }
+        .save-cancel-btn {
+            padding: 8px 14px;
+            background: #f0f2f5;
+            border: 1.5px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #666;
+            cursor: pointer;
         }
 
         /* ====== Tool banner ====== */
@@ -753,17 +899,17 @@
         <div class="brand-wrap">
             <div class="brand-main">
                 <svg width="24" height="50" viewBox="0 0 38 78" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="14" y="0" width="10" height="10" rx="3" fill="#1a1a2e"/>
-                    <rect x="7"  y="1"  width="8" height="3" rx="1.5" fill="#1a1a2e"/>
-                    <rect x="7"  y="6"  width="8" height="3" rx="1.5" fill="#1a1a2e"/>
-                    <rect x="23" y="1"  width="8" height="3" rx="1.5" fill="#1a1a2e"/>
-                    <rect x="23" y="6"  width="8" height="3" rx="1.5" fill="#1a1a2e"/>
-                    <rect x="14" y="10" width="10" height="2"  rx="1" fill="#888"/>
-                    <rect x="16" y="12" width="6"  height="24" fill="#1a1a2e"/>
-                    <ellipse cx="19" cy="46" rx="12" ry="10" fill="#1a1a2e"/>
-                    <ellipse cx="19" cy="62" rx="16" ry="14" fill="#1a1a2e"/>
-                    <circle  cx="19" cy="60" r="5.5" fill="#f0f2f5"/>
-                    <rect x="11" y="68" width="16" height="2.5" rx="1.2" fill="#666"/>
+                    <rect x="14" y="0" width="10" height="10" rx="3" fill="#fff"/>
+                    <rect x="7"  y="1"  width="8" height="3" rx="1.5" fill="#fff"/>
+                    <rect x="7"  y="6"  width="8" height="3" rx="1.5" fill="#fff"/>
+                    <rect x="23" y="1"  width="8" height="3" rx="1.5" fill="#fff"/>
+                    <rect x="23" y="6"  width="8" height="3" rx="1.5" fill="#fff"/>
+                    <rect x="14" y="10" width="10" height="2"  rx="1" fill="rgba(255,255,255,0.5)"/>
+                    <rect x="16" y="12" width="6"  height="24" fill="#fff"/>
+                    <ellipse cx="19" cy="46" rx="12" ry="10" fill="#fff"/>
+                    <ellipse cx="19" cy="62" rx="16" ry="14" fill="#fff"/>
+                    <circle  cx="19" cy="60" r="5.5" fill="#1a1a2e"/>
+                    <rect x="11" y="68" width="16" height="2.5" rx="1.2" fill="rgba(255,255,255,0.5)"/>
                 </svg>
                 TSG
             </div>
@@ -906,6 +1052,7 @@
             <span class="ctrl-label">ドット色</span>
             <div class="color-btns" id="colorBtns"></div>
             <div style="margin-left:auto;display:flex;gap:6px;">
+                <button class="save-btn" id="saveBtn">💾 保存</button>
                 <button class="play-btn" id="playBtn">▶ 再生</button>
                 <button class="stop-btn" id="stopBtn" disabled>■ 停止</button>
                 <button class="clear-btn" id="clearBtn">全消去</button>
@@ -919,6 +1066,21 @@
 
         <div class="legend">
             <span style="font-size:0.75rem;color:#888;">タップでドットを置く・消す</span>
+        </div>
+
+        <!-- 保存名入力ダイアログ -->
+        <div class="save-dialog" id="saveDialog">
+            <input class="save-name-input" id="saveNameInput" type="text" placeholder="名前を入力（例: Cメジャー 5〜9f）" maxlength="40">
+            <button class="save-ok-btn" id="saveOkBtn">保存する</button>
+            <button class="save-cancel-btn" id="saveCancelBtn">キャンセル</button>
+        </div>
+
+        <!-- ライブラリ -->
+        <div class="library-section" id="librarySection">
+            <div class="library-header">
+                <span class="library-title">📚 保存したパターン</span>
+            </div>
+            <div id="libraryList"></div>
         </div>
 
         <div class="memo-area">
@@ -1421,6 +1583,94 @@
         if (audioCtx) { audioCtx.close(); audioCtx = null; }
     }
 
+    // ── ライブラリ機能 ──
+    const LIBRARY_KEY = 'tsg_scale_library';
+
+    function loadLibrary() {
+        try { return JSON.parse(localStorage.getItem(LIBRARY_KEY)) || []; }
+        catch(e) { return []; }
+    }
+    function saveLibrary(items) {
+        localStorage.setItem(LIBRARY_KEY, JSON.stringify(items));
+    }
+
+    function renderLibrary() {
+        const items = loadLibrary();
+        const listEl = document.getElementById('libraryList');
+        if (items.length === 0) {
+            listEl.innerHTML = '<div class="library-empty">保存されたパターンはありません</div>';
+            return;
+        }
+        listEl.innerHTML = '';
+        listEl.className = 'library-list';
+        items.forEach((item, idx) => {
+            const div = document.createElement('div');
+            div.className = 'lib-item';
+            div.innerHTML = `
+                <div class="lib-item-info">
+                    <div class="lib-item-name">${item.name}</div>
+                    <div class="lib-item-meta">${item.scaleName}  ルート: ${rootNames()[item.root]}  ${item.date}</div>
+                </div>
+                <button class="lib-load-btn">読み込む</button>
+                <button class="lib-del-btn">削除</button>
+            `;
+            div.querySelector('.lib-load-btn').onclick = () => {
+                // freeDots を復元
+                for (let s = 0; s < 6; s++)
+                    for (let f = 0; f <= FRET_MAX; f++)
+                        freeDots[s][f] = item.dots[s][f] || null;
+                freeRoot = item.root;
+                freeScaleName = item.scaleName;
+                // UI を合わせる
+                freeScaleSelEl.value = freeScaleName;
+                freeRootBtnsEl.querySelectorAll('.rbtn').forEach((b,i) => b.classList.toggle('active', i === freeRoot));
+                renderFree();
+            };
+            div.querySelector('.lib-del-btn').onclick = () => {
+                if (!confirm(`「${item.name}」を削除しますか？`)) return;
+                const list = loadLibrary();
+                list.splice(idx, 1);
+                saveLibrary(list);
+                renderLibrary();
+            };
+            listEl.appendChild(div);
+        });
+    }
+
+    // 保存ボタン
+    document.getElementById('saveBtn').onclick = () => {
+        const dialog = document.getElementById('saveDialog');
+        dialog.classList.add('open');
+        document.getElementById('saveNameInput').focus();
+    };
+    document.getElementById('saveCancelBtn').onclick = () => {
+        document.getElementById('saveDialog').classList.remove('open');
+        document.getElementById('saveNameInput').value = '';
+    };
+    document.getElementById('saveOkBtn').onclick = () => {
+        const name = document.getElementById('saveNameInput').value.trim();
+        if (!name) { alert('名前を入力してください'); return; }
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}/${today.getMonth()+1}/${today.getDate()}`;
+        const item = {
+            name,
+            scaleName: freeScaleName,
+            root: freeRoot,
+            dots: freeDots.map(row => [...row]),
+            date: dateStr
+        };
+        const list = loadLibrary();
+        list.unshift(item); // 新しい順
+        saveLibrary(list);
+        document.getElementById('saveDialog').classList.remove('open');
+        document.getElementById('saveNameInput').value = '';
+        renderLibrary();
+    };
+    // Enterキーで保存
+    document.getElementById('saveNameInput').onkeydown = (e) => {
+        if (e.key === 'Enter') document.getElementById('saveOkBtn').click();
+    };
+
     // ── 初期描画 ──
     // ── ヘルプモーダル ──
     const helpModal = document.getElementById('helpModal');
@@ -1430,6 +1680,7 @@
 
     // ── 初期描画 ──
     renderAuto();
+    renderLibrary();
     // フリーモード初期値: フレット4〜8のメジャースケールを読み込んだ状態
     document.getElementById('fretFrom').value = 4;
     document.getElementById('fretTo').value = 8;
