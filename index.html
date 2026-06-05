@@ -686,86 +686,107 @@
 
         /* ====== Quick slots ====== */
         .slot-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            display: flex;
+            flex-wrap: wrap;
             gap: 8px;
-            margin-top: 4px;
+            margin-top: 6px;
         }
         .slot-btn {
             position: relative;
             display: flex;
             flex-direction: column;
-            align-items: flex-start;
-            padding: 10px 10px 10px 10px;
-            border-radius: 9px;
-            border: 2px dashed #d0d4db;
-            background: #f7f8fa;
+            align-items: center;
+            justify-content: center;
+            width: 108px;
+            min-height: 72px;
+            padding: 8px 10px 8px 10px;
+            border-radius: 10px;
+            border: 2px dashed #cdd0d8;
+            background: #f4f5f8;
             cursor: pointer;
-            transition: 0.15s;
-            min-height: 62px;
-            text-align: left;
+            transition: background 0.13s, border-color 0.13s, box-shadow 0.13s, transform 0.13s;
+            text-align: center;
             -webkit-tap-highlight-color: transparent;
+        }
+        .slot-btn:not(.filled):hover {
+            border-color: #aab0c0;
+            background: #eef0f5;
         }
         .slot-btn.filled {
             border-style: solid;
             border-color: #2176ae;
-            background: #eef5fb;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(33,118,174,0.15);
         }
         .slot-btn.filled:hover {
-            background: #dceef9;
+            background: #eef5fb;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(33,118,174,0.2);
-        }
-        .slot-btn:not(.filled):hover {
-            border-color: #7b4fa6;
-            background: #f5f0fa;
+            box-shadow: 0 5px 14px rgba(33,118,174,0.22);
         }
         .slot-num {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: #bbb;
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            color: #c0c4cc;
             line-height: 1;
-            margin-bottom: 4px;
+            margin-bottom: 5px;
         }
-        .slot-btn.filled .slot-num { color: #2176ae; }
+        .slot-btn.filled .slot-num {
+            color: #2176ae;
+        }
         .slot-name {
-            font-size: 0.82rem;
+            font-size: 0.78rem;
             font-weight: 700;
             color: #1a1a2e;
             line-height: 1.3;
-            word-break: break-all;
+            max-width: 100%;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
         }
         .slot-meta {
-            font-size: 0.7rem;
-            color: #999;
-            margin-top: 3px;
+            font-size: 0.65rem;
+            color: #8a9ab0;
+            margin-top: 4px;
             line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+        .slot-empty-icon {
+            font-size: 1.2rem;
+            color: #cdd0d8;
+            line-height: 1;
+            margin-bottom: 4px;
         }
         .slot-empty-label {
-            font-size: 0.8rem;
-            color: #bbb;
+            font-size: 0.7rem;
+            color: #bcc0ca;
             font-weight: 600;
         }
         .slot-clear {
             position: absolute;
-            top: 5px;
-            right: 5px;
-            width: 18px;
-            height: 18px;
+            top: 4px;
+            right: 4px;
+            width: 17px;
+            height: 17px;
             border-radius: 50%;
             border: none;
-            background: rgba(33,118,174,0.15);
+            background: #dce8f4;
             color: #2176ae;
-            font-size: 0.7rem;
-            line-height: 18px;
+            font-size: 0.6rem;
+            line-height: 17px;
             text-align: center;
             cursor: pointer;
             display: none;
             padding: 0;
             -webkit-tap-highlight-color: transparent;
+            font-weight: 700;
         }
         .slot-btn.filled .slot-clear { display: block; }
-        .slot-clear:hover { background: #fde8e8; color: #c0392b; }
+        .slot-clear:hover { background: #fde0e0; color: #c0392b; }
 
         /* ====== Save name dialog (inline) ====== */
         .save-dialog {
@@ -1718,7 +1739,8 @@
             } else {
                 btn.innerHTML = `
                     <span class="slot-num">S${idx + 1}</span>
-                    <span class="slot-empty-label">+ 保存する</span>
+                    <span class="slot-empty-icon">＋</span>
+                    <span class="slot-empty-label">空き</span>
                 `;
                 btn.onclick = () => {
                     pendingSlotIdx = idx;
