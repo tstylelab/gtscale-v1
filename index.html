@@ -658,6 +658,31 @@
             color: #1a1a2e;
             letter-spacing: 0.04em;
         }
+        .library-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .lib-export-btn, .lib-import-btn {
+            padding: 6px 12px;
+            border-radius: 7px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.12s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .lib-export-btn {
+            background: #f0f2f5;
+            border: 1.5px solid #ddd;
+            color: #555;
+        }
+        .lib-export-btn:hover { background: #e2e6ec; }
+        .lib-import-btn {
+            background: #f0f2f5;
+            border: 1.5px solid #ddd;
+            color: #555;
+        }
+        .lib-import-btn:hover { background: #e2e6ec; }
         .library-empty {
             font-size: 0.88rem;
             color: #aaa;
@@ -1079,6 +1104,11 @@
         <div class="library-section" id="librarySection">
             <div class="library-header">
                 <span class="library-title">📚 保存したパターン</span>
+                <div class="library-actions">
+                    <button class="lib-export-btn" id="exportBtn">⬇ エクスポート</button>
+                    <button class="lib-import-btn" id="importBtn">⬆ インポート</button>
+                    <input type="file" id="importFile" accept=".json" style="display:none">
+                </div>
             </div>
             <div id="libraryList"></div>
         </div>
@@ -1669,6 +1699,65 @@
     // Enterキーで保存
     document.getElementById('saveNameInput').onkeydown = (e) => {
         if (e.key === 'Enter') document.getElementById('saveOkBtn').click();
+    };
+
+    // ── エクスポート ──
+    document.getElementById('exportBtn').onclick = () => {
+        const list = loadLibrary();
+        if (list.length === 0) { alert('保存されたパターンがありません'); return; }
+        const json = JSON.stringify({ app: 'TSG Scale Viewer', version: 1, patterns: list }, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
+        a.href = url;
+        a.download = `tsg-scale-patterns-${dateStr}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    // ── インポート ──
+    document.getElementById('importBtn').onclick = () => {
+        document.getElementById('importFile').click();
+    };
+    document.getElementById('importFile').onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                // { app, version, patterns } 形式か、直接配列かに対応
+                const incoming = Array.isArray(data) ? data : (data.patterns || []);
+                if (!incoming.length) { alert('読み込めるパターンが見つかりませんでした'); return; }
+                const existing = loadLibrary();
+                // 同名パターンは上書き確認
+                let merged = [...existing];
+                let addCount = 0, skipCount = 0;
+                incoming.forEach(item => {
+                    const dupIdx = merged.findIndex(x => x.name === item.name);
+                    if (dupIdx !== -1) {
+                        if (confirm(`「${item.name}」は既に存在します。上書きしますか？`)) {
+                            merged[dupIdx] = item;
+                        } else {
+                            skipCount++;
+                            return;
+                        }
+                    } else {
+                        merged.unshift(item);
+                        addCount++;
+                    }
+                });
+                saveLibrary(merged);
+                renderLibrary();
+                alert(`インポート完了：${addCount}件追加${skipCount ? `、${skipCount}件スキップ` : ''}`);
+            } catch(err) {
+                alert('ファイルの読み込みに失敗しました。正しいJSONファイルを選んでください。');
+            }
+            e.target.value = ''; // 同じファイルを再度読み込めるようにリセット
+        };
+        reader.readAsText(file);
     };
 
     // ── 初期描画 ──
