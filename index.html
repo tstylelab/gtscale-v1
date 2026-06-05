@@ -793,26 +793,37 @@
             color: #bcc0ca;
             font-weight: 600;
         }
-        .slot-clear {
+        .slot-icons {
             position: absolute;
             top: 4px;
             right: 4px;
+            display: none;
+            gap: 3px;
+        }
+        .slot-btn.filled .slot-icons { display: flex; }
+        .slot-clear, .slot-rename {
             width: 17px;
             height: 17px;
             border-radius: 50%;
             border: none;
-            background: #dce8f4;
-            color: #2176ae;
             font-size: 0.6rem;
             line-height: 17px;
             text-align: center;
             cursor: pointer;
-            display: none;
             padding: 0;
             -webkit-tap-highlight-color: transparent;
             font-weight: 700;
+            flex-shrink: 0;
         }
-        .slot-btn.filled .slot-clear { display: block; }
+        .slot-rename {
+            background: #e8f0fe;
+            color: #2176ae;
+        }
+        .slot-rename:hover { background: #d0e4f8; }
+        .slot-clear {
+            background: #dce8f4;
+            color: #2176ae;
+        }
         .slot-clear:hover { background: #fde0e0; color: #c0392b; }
 
         /* ====== Save name dialog (inline) ====== */
@@ -1180,7 +1191,7 @@
             <span style="font-size:0.75rem;color:#888;">タップでドットを置く・消す</span>
         </div>
 
-        <!-- 保存名入力ダイアログ -->
+        <!-- 保存名入力ダイアログ（保存・名前変更共用） -->
         <div class="save-dialog" id="saveDialog">
             <input class="save-name-input" id="saveNameInput" type="text" placeholder="名前を入力（例: Cメジャー 5〜9f）" maxlength="40">
             <button class="save-ok-btn" id="saveOkBtn">保存する</button>
@@ -1740,7 +1751,8 @@
         renderFree();
     }
 
-    let pendingSlotIdx = null; // 保存ダイアログで使うスロット番号
+    let pendingSlotIdx = null;    // 保存ダイアログで使うスロット番号
+    let renameMode = false;       // true=名前変更モード、false=新規保存モード
 
     function renderSlots() {
         const slots = loadSlots();
@@ -1755,9 +1767,25 @@
                     <span class="slot-num">S${idx + 1}</span>
                     <span class="slot-name">${item.name}</span>
                     <span class="slot-meta">${item.scaleName} / ${rootNames()[item.root]}</span>
-                    <button class="slot-clear" title="クリア">✕</button>
+                    <span class="slot-icons">
+                        <button class="slot-rename" title="名前変更">✎</button>
+                        <button class="slot-clear" title="クリア">✕</button>
+                    </span>
                 `;
                 btn.onclick = () => readSlot(item);
+                btn.querySelector('.slot-rename').onclick = (e) => {
+                    e.stopPropagation();
+                    pendingSlotIdx = idx;
+                    renameMode = true;
+                    const dialog = document.getElementById('saveDialog');
+                    const okBtn = document.getElementById('saveOkBtn');
+                    okBtn.textContent = '変更する';
+                    dialog.classList.add('open');
+                    const input = document.getElementById('saveNameInput');
+                    input.value = item.name;
+                    input.select();
+                    input.focus();
+                };
                 btn.querySelector('.slot-clear').onclick = (e) => {
                     e.stopPropagation();
                     if (!confirm(`S${idx + 1}「${item.name}」をクリアしますか？`)) return;
@@ -1806,18 +1834,27 @@
         input.select();
         input.focus();
     };
-    document.getElementById('saveCancelBtn').onclick = () => {
+    function closeDialog() {
         document.getElementById('saveDialog').classList.remove('open');
         document.getElementById('saveNameInput').value = '';
+        document.getElementById('saveOkBtn').textContent = '保存する';
         pendingSlotIdx = null;
-    };
+        renameMode = false;
+    }
+    document.getElementById('saveCancelBtn').onclick = closeDialog;
     document.getElementById('saveOkBtn').onclick = () => {
         const name = document.getElementById('saveNameInput').value.trim();
         if (!name) { alert('名前を入力してください'); return; }
-        writeSlot(pendingSlotIdx, name);
-        document.getElementById('saveDialog').classList.remove('open');
-        document.getElementById('saveNameInput').value = '';
-        pendingSlotIdx = null;
+        if (renameMode) {
+            // 名前だけ変更、ドットデータはそのまま保持
+            const slots = loadSlots();
+            if (slots[pendingSlotIdx]) slots[pendingSlotIdx].name = name;
+            saveSlots(slots);
+            renderSlots();
+        } else {
+            writeSlot(pendingSlotIdx, name);
+        }
+        closeDialog();
     };
     // Enterキーで保存
     document.getElementById('saveNameInput').onkeydown = (e) => {
