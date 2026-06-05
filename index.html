@@ -653,10 +653,24 @@
             margin-bottom: 10px;
         }
         .library-title {
-            font-size: 0.9rem;
-            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Oswald', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
             color: #1a1a2e;
-            letter-spacing: 0.04em;
+        }
+        .library-title::before {
+            content: '';
+            display: block;
+            width: 4px;
+            height: 18px;
+            background: #c0392b;
+            border-radius: 2px;
+            flex-shrink: 0;
         }
         .library-actions {
             display: flex;
@@ -1163,7 +1177,7 @@
         <!-- クイックスロット -->
         <div class="library-section" id="librarySection">
             <div class="library-header">
-                <span class="library-title">⚡ クイックスロット</span>
+                <span class="library-title">Quick Slots</span>
                 <div class="library-actions">
                     <button class="lib-export-btn" id="exportBtn">⬇ エクスポート</button>
                     <button class="lib-import-btn" id="importBtn">⬆ インポート</button>
