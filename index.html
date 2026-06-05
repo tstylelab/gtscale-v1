@@ -672,6 +672,13 @@
             border-radius: 2px;
             flex-shrink: 0;
         }
+        .library-subtitle {
+            font-size: 0.78rem;
+            color: #999;
+            margin-top: 3px;
+            font-weight: 400;
+            letter-spacing: 0.02em;
+        }
         .library-actions {
             display: flex;
             gap: 6px;
@@ -1177,7 +1184,10 @@
         <!-- クイックスロット -->
         <div class="library-section" id="librarySection">
             <div class="library-header">
-                <span class="library-title">Quick Slots</span>
+                <div>
+                    <span class="library-title">Quick Slots</span>
+                    <div class="library-subtitle">作成したスケールを8つまで保存できます。空きスロットをタップして保存、保存済みはタップで即読み込み。</div>
+                </div>
                 <div class="library-actions">
                     <button class="lib-export-btn" id="exportBtn">⬇ エクスポート</button>
                     <button class="lib-import-btn" id="importBtn">⬆ インポート</button>
