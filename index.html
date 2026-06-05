@@ -683,70 +683,89 @@
             color: #555;
         }
         .lib-import-btn:hover { background: #e2e6ec; }
-        .library-empty {
-            font-size: 0.88rem;
-            color: #aaa;
-            text-align: center;
-            padding: 14px 0;
+
+        /* ====== Quick slots ====== */
+        .slot-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 4px;
         }
-        .library-list {
+        .slot-btn {
+            position: relative;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-        }
-        .lib-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
+            align-items: flex-start;
+            padding: 10px 10px 10px 10px;
+            border-radius: 9px;
+            border: 2px dashed #d0d4db;
             background: #f7f8fa;
-            border-radius: 8px;
-            border: 1.5px solid #e8eaed;
+            cursor: pointer;
+            transition: 0.15s;
+            min-height: 62px;
+            text-align: left;
+            -webkit-tap-highlight-color: transparent;
         }
-        .lib-item-info {
-            flex: 1;
-            min-width: 0;
+        .slot-btn.filled {
+            border-style: solid;
+            border-color: #2176ae;
+            background: #eef5fb;
         }
-        .lib-item-name {
-            font-size: 0.95rem;
+        .slot-btn.filled:hover {
+            background: #dceef9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(33,118,174,0.2);
+        }
+        .slot-btn:not(.filled):hover {
+            border-color: #7b4fa6;
+            background: #f5f0fa;
+        }
+        .slot-num {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #bbb;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+        .slot-btn.filled .slot-num { color: #2176ae; }
+        .slot-name {
+            font-size: 0.82rem;
             font-weight: 700;
             color: #1a1a2e;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            line-height: 1.3;
+            word-break: break-all;
         }
-        .lib-item-meta {
-            font-size: 0.78rem;
+        .slot-meta {
+            font-size: 0.7rem;
             color: #999;
-            margin-top: 2px;
+            margin-top: 3px;
+            line-height: 1.2;
         }
-        .lib-load-btn {
-            padding: 7px 14px;
-            background: #2176ae;
-            border: none;
-            border-radius: 7px;
-            font-size: 0.85rem;
+        .slot-empty-label {
+            font-size: 0.8rem;
+            color: #bbb;
             font-weight: 600;
-            color: #fff;
+        }
+        .slot-clear {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(33,118,174,0.15);
+            color: #2176ae;
+            font-size: 0.7rem;
+            line-height: 18px;
+            text-align: center;
             cursor: pointer;
-            transition: 0.12s;
-            flex-shrink: 0;
+            display: none;
+            padding: 0;
             -webkit-tap-highlight-color: transparent;
         }
-        .lib-load-btn:hover { background: #1a5f8a; }
-        .lib-del-btn {
-            padding: 7px 10px;
-            background: #f0f2f5;
-            border: 1.5px solid #ddd;
-            border-radius: 7px;
-            font-size: 0.85rem;
-            color: #888;
-            cursor: pointer;
-            transition: 0.12s;
-            flex-shrink: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .lib-del-btn:hover { background: #fde8e8; border-color: #e57373; color: #c0392b; }
+        .slot-btn.filled .slot-clear { display: block; }
+        .slot-clear:hover { background: #fde8e8; color: #c0392b; }
 
         /* ====== Save name dialog (inline) ====== */
         .save-dialog {
@@ -1100,17 +1119,17 @@
             <button class="save-cancel-btn" id="saveCancelBtn">キャンセル</button>
         </div>
 
-        <!-- ライブラリ -->
+        <!-- クイックスロット -->
         <div class="library-section" id="librarySection">
             <div class="library-header">
-                <span class="library-title">📚 保存したパターン</span>
+                <span class="library-title">⚡ クイックスロット</span>
                 <div class="library-actions">
                     <button class="lib-export-btn" id="exportBtn">⬇ エクスポート</button>
                     <button class="lib-import-btn" id="importBtn">⬆ インポート</button>
                     <input type="file" id="importFile" accept=".json" style="display:none">
                 </div>
             </div>
-            <div id="libraryList"></div>
+            <div class="slot-grid" id="slotGrid"></div>
         </div>
 
         <div class="memo-area">
@@ -1613,88 +1632,120 @@
         if (audioCtx) { audioCtx.close(); audioCtx = null; }
     }
 
-    // ── ライブラリ機能 ──
-    const LIBRARY_KEY = 'tsg_scale_library';
+    // ── クイックスロット機能 ──
+    const SLOT_KEY = 'tsg_scale_slots';
+    const SLOT_COUNT = 8;
 
-    function loadLibrary() {
-        try { return JSON.parse(localStorage.getItem(LIBRARY_KEY)) || []; }
-        catch(e) { return []; }
+    function loadSlots() {
+        try { return JSON.parse(localStorage.getItem(SLOT_KEY)) || Array(SLOT_COUNT).fill(null); }
+        catch(e) { return Array(SLOT_COUNT).fill(null); }
     }
-    function saveLibrary(items) {
-        localStorage.setItem(LIBRARY_KEY, JSON.stringify(items));
+    function saveSlots(slots) {
+        localStorage.setItem(SLOT_KEY, JSON.stringify(slots));
     }
 
-    function renderLibrary() {
-        const items = loadLibrary();
-        const listEl = document.getElementById('libraryList');
-        if (items.length === 0) {
-            listEl.innerHTML = '<div class="library-empty">保存されたパターンはありません</div>';
-            return;
-        }
-        listEl.innerHTML = '';
-        listEl.className = 'library-list';
-        items.forEach((item, idx) => {
-            const div = document.createElement('div');
-            div.className = 'lib-item';
-            div.innerHTML = `
-                <div class="lib-item-info">
-                    <div class="lib-item-name">${item.name}</div>
-                    <div class="lib-item-meta">${item.scaleName}  ルート: ${rootNames()[item.root]}  ${item.date}</div>
-                </div>
-                <button class="lib-load-btn">読み込む</button>
-                <button class="lib-del-btn">削除</button>
-            `;
-            div.querySelector('.lib-load-btn').onclick = () => {
-                // freeDots を復元
-                for (let s = 0; s < 6; s++)
-                    for (let f = 0; f <= FRET_MAX; f++)
-                        freeDots[s][f] = item.dots[s][f] || null;
-                freeRoot = item.root;
-                freeScaleName = item.scaleName;
-                // UI を合わせる
-                freeScaleSelEl.value = freeScaleName;
-                freeRootBtnsEl.querySelectorAll('.rbtn').forEach((b,i) => b.classList.toggle('active', i === freeRoot));
-                renderFree();
-            };
-            div.querySelector('.lib-del-btn').onclick = () => {
-                if (!confirm(`「${item.name}」を削除しますか？`)) return;
-                const list = loadLibrary();
-                list.splice(idx, 1);
-                saveLibrary(list);
-                renderLibrary();
-            };
-            listEl.appendChild(div);
+    // スロットにパターンを書き込む共通処理
+    function writeSlot(idx, name) {
+        const slots = loadSlots();
+        slots[idx] = {
+            name,
+            scaleName: freeScaleName,
+            root: freeRoot,
+            dots: freeDots.map(row => [...row])
+        };
+        saveSlots(slots);
+        renderSlots();
+    }
+
+    // スロットからパターンを読み込む
+    function readSlot(item) {
+        for (let s = 0; s < 6; s++)
+            for (let f = 0; f <= FRET_MAX; f++)
+                freeDots[s][f] = item.dots[s][f] || null;
+        freeRoot = item.root;
+        freeScaleName = item.scaleName;
+        freeScaleSelEl.value = freeScaleName;
+        freeRootBtnsEl.querySelectorAll('.rbtn').forEach((b, i) => b.classList.toggle('active', i === freeRoot));
+        renderFree();
+    }
+
+    let pendingSlotIdx = null; // 保存ダイアログで使うスロット番号
+
+    function renderSlots() {
+        const slots = loadSlots();
+        const grid = document.getElementById('slotGrid');
+        grid.innerHTML = '';
+        slots.forEach((item, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'slot-btn' + (item ? ' filled' : '');
+
+            if (item) {
+                btn.innerHTML = `
+                    <span class="slot-num">S${idx + 1}</span>
+                    <span class="slot-name">${item.name}</span>
+                    <span class="slot-meta">${item.scaleName} / ${rootNames()[item.root]}</span>
+                    <button class="slot-clear" title="クリア">✕</button>
+                `;
+                btn.onclick = () => readSlot(item);
+                btn.querySelector('.slot-clear').onclick = (e) => {
+                    e.stopPropagation();
+                    if (!confirm(`S${idx + 1}「${item.name}」をクリアしますか？`)) return;
+                    const slots = loadSlots();
+                    slots[idx] = null;
+                    saveSlots(slots);
+                    renderSlots();
+                };
+            } else {
+                btn.innerHTML = `
+                    <span class="slot-num">S${idx + 1}</span>
+                    <span class="slot-empty-label">+ 保存する</span>
+                `;
+                btn.onclick = () => {
+                    pendingSlotIdx = idx;
+                    const dialog = document.getElementById('saveDialog');
+                    dialog.classList.add('open');
+                    const input = document.getElementById('saveNameInput');
+                    // デフォルト名を自動入力
+                    input.value = `${rootNames()[freeRoot]} ${freeScaleName}`;
+                    input.select();
+                    input.focus();
+                };
+            }
+            grid.appendChild(btn);
         });
     }
 
-    // 保存ボタン
+    // 保存ボタン（上部コントロールの💾）→ 空きスロットに保存 or 上書き選択
     document.getElementById('saveBtn').onclick = () => {
+        const slots = loadSlots();
+        const emptyIdx = slots.findIndex(s => s === null);
+        if (emptyIdx !== -1) {
+            pendingSlotIdx = emptyIdx;
+        } else {
+            // 全スロット埋まっている場合は S1 に上書き
+            const choice = confirm('全スロットが使用中です。S1を上書きしますか？');
+            if (!choice) return;
+            pendingSlotIdx = 0;
+        }
         const dialog = document.getElementById('saveDialog');
         dialog.classList.add('open');
-        document.getElementById('saveNameInput').focus();
+        const input = document.getElementById('saveNameInput');
+        input.value = `${rootNames()[freeRoot]} ${freeScaleName}`;
+        input.select();
+        input.focus();
     };
     document.getElementById('saveCancelBtn').onclick = () => {
         document.getElementById('saveDialog').classList.remove('open');
         document.getElementById('saveNameInput').value = '';
+        pendingSlotIdx = null;
     };
     document.getElementById('saveOkBtn').onclick = () => {
         const name = document.getElementById('saveNameInput').value.trim();
         if (!name) { alert('名前を入力してください'); return; }
-        const today = new Date();
-        const dateStr = `${today.getFullYear()}/${today.getMonth()+1}/${today.getDate()}`;
-        const item = {
-            name,
-            scaleName: freeScaleName,
-            root: freeRoot,
-            dots: freeDots.map(row => [...row]),
-            date: dateStr
-        };
-        const list = loadLibrary();
-        list.unshift(item); // 新しい順
-        saveLibrary(list);
+        writeSlot(pendingSlotIdx, name);
         document.getElementById('saveDialog').classList.remove('open');
         document.getElementById('saveNameInput').value = '';
-        renderLibrary();
+        pendingSlotIdx = null;
     };
     // Enterキーで保存
     document.getElementById('saveNameInput').onkeydown = (e) => {
@@ -1703,16 +1754,17 @@
 
     // ── エクスポート ──
     document.getElementById('exportBtn').onclick = () => {
-        const list = loadLibrary();
-        if (list.length === 0) { alert('保存されたパターンがありません'); return; }
-        const json = JSON.stringify({ app: 'TSG Scale Viewer', version: 1, patterns: list }, null, 2);
+        const slots = loadSlots();
+        const filled = slots.filter(s => s !== null);
+        if (filled.length === 0) { alert('保存されたスロットがありません'); return; }
+        const json = JSON.stringify({ app: 'TSG Scale Viewer', version: 2, slots }, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         const today = new Date();
         const dateStr = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
         a.href = url;
-        a.download = `tsg-scale-patterns-${dateStr}.json`;
+        a.download = `tsg-scale-slots-${dateStr}.json`;
         a.click();
         URL.revokeObjectURL(url);
     };
@@ -1728,34 +1780,24 @@
         reader.onload = (ev) => {
             try {
                 const data = JSON.parse(ev.target.result);
-                // { app, version, patterns } 形式か、直接配列かに対応
-                const incoming = Array.isArray(data) ? data : (data.patterns || []);
-                if (!incoming.length) { alert('読み込めるパターンが見つかりませんでした'); return; }
-                const existing = loadLibrary();
-                // 同名パターンは上書き確認
-                let merged = [...existing];
-                let addCount = 0, skipCount = 0;
-                incoming.forEach(item => {
-                    const dupIdx = merged.findIndex(x => x.name === item.name);
-                    if (dupIdx !== -1) {
-                        if (confirm(`「${item.name}」は既に存在します。上書きしますか？`)) {
-                            merged[dupIdx] = item;
-                        } else {
-                            skipCount++;
-                            return;
-                        }
-                    } else {
-                        merged.unshift(item);
-                        addCount++;
-                    }
-                });
-                saveLibrary(merged);
-                renderLibrary();
-                alert(`インポート完了：${addCount}件追加${skipCount ? `、${skipCount}件スキップ` : ''}`);
+                let incoming;
+                if (data.version === 2 && Array.isArray(data.slots)) {
+                    incoming = data.slots; // スロット配列（null含む）
+                } else if (Array.isArray(data.patterns)) {
+                    // v1形式（旧ライブラリ）→ 先頭スロットから順に詰める
+                    incoming = Array(SLOT_COUNT).fill(null);
+                    data.patterns.slice(0, SLOT_COUNT).forEach((item, i) => { incoming[i] = item; });
+                } else {
+                    alert('対応していないファイル形式です'); return;
+                }
+                if (!confirm('現在のスロットをインポートデータで上書きしますか？')) return;
+                saveSlots(incoming);
+                renderSlots();
+                alert('インポート完了しました');
             } catch(err) {
                 alert('ファイルの読み込みに失敗しました。正しいJSONファイルを選んでください。');
             }
-            e.target.value = ''; // 同じファイルを再度読み込めるようにリセット
+            e.target.value = '';
         };
         reader.readAsText(file);
     };
@@ -1769,7 +1811,7 @@
 
     // ── 初期描画 ──
     renderAuto();
-    renderLibrary();
+    renderSlots();
     // フリーモード初期値: フレット4〜8のメジャースケールを読み込んだ状態
     document.getElementById('fretFrom').value = 4;
     document.getElementById('fretTo').value = 8;
