@@ -1740,6 +1740,7 @@
             name,
             scaleName: freeScaleName,
             root: freeRoot,
+            notation: freeNotation,
             dots: freeDots.map(row => [...row])
         };
         saveSlots(slots);
@@ -1755,6 +1756,11 @@
         freeScaleName = item.scaleName;
         freeScaleSelEl.value = freeScaleName;
         freeRootBtnsEl.querySelectorAll('.rbtn').forEach((b, i) => b.classList.toggle('active', i === freeRoot));
+        // 音名表記を復元（保存されていない旧データは 'en' にフォールバック）
+        if (item.notation) {
+            freeNotation = item.notation;
+            document.querySelectorAll('[data-fn]').forEach(b => b.classList.toggle('active', b.dataset.fn === freeNotation));
+        }
         renderFree();
     }
 
