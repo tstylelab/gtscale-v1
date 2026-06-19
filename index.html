@@ -1243,7 +1243,7 @@
             }
             .print-dot {
                 position: relative; z-index: 2;
-                width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+                width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
                 print-color-adjust: exact;
                 -webkit-print-color-adjust: exact;
             }
@@ -2677,9 +2677,15 @@
 
     // ── 印刷用ミニフレットボードを生成 ──
     function makePrintFretboard(item) {
-        const startFret = getBestFretWindow(item.dots);
+        const activeFrets = [];
+        for (let s = 0; s < 6; s++)
+            for (let f = 0; f <= FRET_MAX; f++)
+                if (item.dots[s][f]) activeFrets.push(f);
+        const minF = activeFrets.length ? Math.min(...activeFrets) : 0;
+        const maxF = activeFrets.length ? Math.max(...activeFrets) : 12;
+        const startFret = Math.max(0, minF - 1);
+        const endFret   = Math.min(FRET_MAX, maxF + 1);
         const showNut = startFret === 0;
-        const endFret = showNut ? 12 : startFret + 11;
 
         const wrapper = document.createDocumentFragment();
 
