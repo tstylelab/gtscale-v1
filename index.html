@@ -320,18 +320,20 @@
         /* ====== Display mode toggle ====== */
         .disp-tabs {
             display: flex;
-            background: rgba(255,255,255,0.12);
-            border-radius: 8px;
-            padding: 3px;
+            background: rgba(0,0,0,0.07);
+            border-radius: 7px;
+            padding: 2px;
             gap: 2px;
+            width: fit-content;
+            margin-bottom: 6px;
         }
         .disp-tab {
-            padding: 7px 16px;
+            padding: 4px 13px;
             border: none;
             background: transparent;
-            color: rgba(255,255,255,0.6);
-            border-radius: 6px;
-            font-size: 0.9rem;
+            color: #555;
+            border-radius: 5px;
+            font-size: 0.8rem;
             font-weight: 600;
             cursor: pointer;
             transition: 0.15s;
@@ -340,7 +342,7 @@
         .disp-tab.active {
             background: #fff;
             color: #1a1a2e;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.18);
         }
 
         /* ====== Fretboard shared ====== */
@@ -1293,10 +1295,6 @@
             <button class="mode-tab active" data-mode="auto">自動モード</button>
             <button class="mode-tab" data-mode="free">フリーモード</button>
         </div>
-        <div class="disp-tabs">
-            <button class="disp-tab active" data-disp="full">フル</button>
-            <button class="disp-tab" data-disp="compact">縮小版</button>
-        </div>
         <button class="help-btn" id="helpBtn">使い方ガイド</button>
         <button class="print-btn" id="printBtn">
             &#128438; 印刷 / PDF保存
@@ -1354,7 +1352,7 @@
                 </li>
                 <li>
                     <strong>📱 スマホで見るときは「縮小版」が便利です</strong><br>
-                    ヘッダーの「縮小版」ボタンで12フレット表示になり、スマホ画面にきれいに収まります。
+                    フレットボード直上の「縮小版」ボタンで12フレット表示になり、スマホ画面にきれいに収まります。
                 </li>
             </ul>
         </div>
@@ -1385,6 +1383,10 @@
             <div class="snotes" id="scaleNotes"></div>
         </div>
 
+        <div class="disp-tabs">
+            <button class="disp-tab active" data-disp="full">フル</button>
+            <button class="disp-tab" data-disp="compact">縮小版</button>
+        </div>
         <div class="fb-wrap">
             <div class="fretboard" id="fretboard-auto"></div>
             <div class="fret-nums" id="fretNums-auto"></div>
@@ -1439,6 +1441,10 @@
             </div>
         </div>
 
+        <div class="disp-tabs">
+            <button class="disp-tab active" data-disp="full">フル</button>
+            <button class="disp-tab" data-disp="compact">縮小版</button>
+        </div>
         <div class="fb-wrap">
             <div class="fretboard" id="fretboard-free"></div>
             <div class="fret-nums" id="fretNums-free"></div>
