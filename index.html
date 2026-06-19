@@ -629,6 +629,47 @@
             margin-bottom: 2px;
         }
 
+        /* ====== Preset loader ====== */
+        .preset-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .preset-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #888;
+            white-space: nowrap;
+        }
+        .preset-select {
+            flex: 1;
+            min-width: 180px;
+            padding: 7px 10px;
+            border: 1.5px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            background: #f7f8fa;
+            color: #333;
+            cursor: pointer;
+        }
+        .preset-load-btn {
+            padding: 7px 16px;
+            background: #1a1a2e;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.12s;
+            white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .preset-load-btn:hover { background: #2e2e50; }
+        .preset-load-btn:active { transform: scale(0.97); }
+
         /* ====== Save button (free controls) ====== */
         .save-btn {
             padding: 9px 16px;
@@ -1207,6 +1248,11 @@
 
         <!-- クイックスロット -->
         <div class="library-section" id="librarySection">
+            <div class="preset-row">
+                <span class="preset-label">プリセット</span>
+                <select class="preset-select" id="presetSelect"></select>
+                <button class="preset-load-btn" id="presetLoadBtn">読み込む</button>
+            </div>
             <div class="library-header">
                 <div>
                     <span class="library-title">Quick Slots</span>
@@ -1241,6 +1287,43 @@
     </div>
 
     <script>
+    // ================================================================
+    // ▼▼▼ プリセット編集エリア（ここを編集して追加・変更してください）▼▼▼
+    // ================================================================
+    // 各スロットの形式:
+    //   { name: "表示名", scaleName: "スケール名", root: 0〜11(C=0,C#=1,...),
+    //     fretFrom: 開始フレット, fretTo: 終了フレット, color: ドット色 }
+    // root: C=0, C#=1, D=2, D#=3, E=4, F=5, F#=6, G=7, G#=8, A=9, A#=10, B=11
+    // color: '#c0392b'赤 / '#2176ae'青 / '#27ae60'緑 / '#e67e22'橙 / '#8e44ad'紫
+
+    const PRESETS = [
+        {
+            label: 'Aマイナーペンタ 5ポジション',
+            slots: [
+                { name: 'Am Penta Pos.1', scaleName: 'マイナーペンタトニック', root: 9, fretFrom: 0,  fretTo: 4,  color: '#2176ae' },
+                { name: 'Am Penta Pos.2', scaleName: 'マイナーペンタトニック', root: 9, fretFrom: 4,  fretTo: 8,  color: '#2176ae' },
+                { name: 'Am Penta Pos.3', scaleName: 'マイナーペンタトニック', root: 9, fretFrom: 7,  fretTo: 11, color: '#2176ae' },
+                { name: 'Am Penta Pos.4', scaleName: 'マイナーペンタトニック', root: 9, fretFrom: 9,  fretTo: 13, color: '#2176ae' },
+                { name: 'Am Penta Pos.5', scaleName: 'マイナーペンタトニック', root: 9, fretFrom: 12, fretTo: 16, color: '#2176ae' },
+            ]
+        },
+        {
+            label: 'Cメジャースケール 7ポジション',
+            slots: [
+                { name: 'C Major Pos.1', scaleName: 'メジャー', root: 0, fretFrom: 0,  fretTo: 4,  color: '#c0392b' },
+                { name: 'C Major Pos.2', scaleName: 'メジャー', root: 0, fretFrom: 2,  fretTo: 6,  color: '#c0392b' },
+                { name: 'C Major Pos.3', scaleName: 'メジャー', root: 0, fretFrom: 4,  fretTo: 8,  color: '#c0392b' },
+                { name: 'C Major Pos.4', scaleName: 'メジャー', root: 0, fretFrom: 5,  fretTo: 9,  color: '#c0392b' },
+                { name: 'C Major Pos.5', scaleName: 'メジャー', root: 0, fretFrom: 7,  fretTo: 11, color: '#c0392b' },
+                { name: 'C Major Pos.6', scaleName: 'メジャー', root: 0, fretFrom: 9,  fretTo: 13, color: '#c0392b' },
+                { name: 'C Major Pos.7', scaleName: 'メジャー', root: 0, fretFrom: 12, fretTo: 16, color: '#c0392b' },
+            ]
+        },
+    ];
+    // ================================================================
+    // ▲▲▲ プリセット編集エリアここまで ▲▲▲
+    // ================================================================
+
     // ── 音名データ ──
     const EN   = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
     const EN_F = ['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
@@ -1723,7 +1806,7 @@
 
     // ── クイックスロット機能 ──
     const SLOT_KEY = 'tsg_scale_slots';
-    const SLOT_COUNT = 8;
+    const SLOT_COUNT = 16;
 
     function loadSlots() {
         try { return JSON.parse(localStorage.getItem(SLOT_KEY)) || Array(SLOT_COUNT).fill(null); }
@@ -1873,6 +1956,64 @@
     document.getElementById('saveNameInput').onkeydown = (e) => {
         if (e.key === 'Enter') document.getElementById('saveOkBtn').click();
     };
+
+    // ── プリセット ──
+
+    // プリセット定義からドット配列を生成する
+    function generateDotsFromPreset(slotDef) {
+        const scale = SCALES[slotDef.scaleName];
+        if (!scale) return Array.from({length: 6}, () => Array(FRET_MAX + 1).fill(null));
+        const intervals = scale.i;
+        const lo = Math.min(slotDef.fretFrom, slotDef.fretTo);
+        const hi = Math.max(slotDef.fretFrom, slotDef.fretTo);
+        const dots = Array.from({length: 6}, () => Array(FRET_MAX + 1).fill(null));
+        for (let s = 0; s < 6; s++) {
+            for (let f = 0; f <= FRET_MAX; f++) {
+                if (f < lo || f > hi) continue;
+                const pitch = (OPEN_PITCHES[s] + f) % 12;
+                const interval = ((pitch - slotDef.root) % 12 + 12) % 12;
+                if (intervals.includes(interval)) {
+                    dots[s][f] = interval === 0 ? FREE_COLORS[0] : slotDef.color;
+                }
+            }
+        }
+        return dots;
+    }
+
+    // プリセット選択肢を構築
+    function buildPresetSelect() {
+        const sel = document.getElementById('presetSelect');
+        sel.innerHTML = '';
+        PRESETS.forEach((preset, i) => {
+            const o = document.createElement('option');
+            o.value = i;
+            o.textContent = preset.label;
+            sel.appendChild(o);
+        });
+    }
+
+    // プリセットをスロットに読み込む
+    document.getElementById('presetLoadBtn').onclick = () => {
+        const idx = parseInt(document.getElementById('presetSelect').value);
+        const preset = PRESETS[idx];
+        if (!preset) return;
+        if (!confirm(`「${preset.label}」をスロットに読み込みます。現在のスロットは上書きされます。よろしいですか？`)) return;
+        const slots = Array(SLOT_COUNT).fill(null);
+        preset.slots.forEach((def, i) => {
+            if (i >= SLOT_COUNT) return;
+            slots[i] = {
+                name: def.name,
+                scaleName: def.scaleName,
+                root: def.root,
+                notation: 'en',
+                dots: generateDotsFromPreset(def)
+            };
+        });
+        saveSlots(slots);
+        renderSlots();
+    };
+
+    buildPresetSelect();
 
     // ── エクスポート ──
     document.getElementById('exportBtn').onclick = () => {
