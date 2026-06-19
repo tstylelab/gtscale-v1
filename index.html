@@ -1175,7 +1175,90 @@
                 background: #c8a870 !important;
                 opacity: 0.8;
             }
+
+            /* スロット印刷モード：通常ビューを隠す */
+            body.slot-print header,
+            body.slot-print #panel-auto,
+            body.slot-print #panel-free,
+            body.slot-print .tool-banner-section { display: none !important; }
+            body.slot-print #printView { display: block !important; }
+
+            .print-title {
+                font-family: 'Oswald', sans-serif;
+                font-size: 13pt;
+                font-weight: 700;
+                color: #1a1a2e;
+                text-align: center;
+                margin-bottom: 5mm;
+                letter-spacing: 0.1em;
+            }
+            .print-slot-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 5mm 8mm;
+            }
+            .print-slot { break-inside: avoid; page-break-inside: avoid; }
+            .print-slot-hdr {
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                border-bottom: 1pt solid #c8a96e;
+                padding-bottom: 1mm;
+                margin-bottom: 1.5mm;
+            }
+            .print-slot-name { font-size: 9pt; font-weight: 700; color: #1a1a2e; }
+            .print-slot-meta { font-size: 7pt; color: #888; }
+            .print-fb {
+                background: #fdf8f0 !important;
+                border: 1pt solid #c8a96e;
+                border-radius: 2pt;
+                border-bottom: none;
+            }
+            .print-str-row { display: flex; align-items: center; height: 17px; }
+            .print-str-label {
+                width: 14px; font-size: 6pt; font-weight: 700;
+                color: #8B5E3C; text-align: center; flex-shrink: 0;
+            }
+            .print-nut-cell {
+                width: 14px; height: 17px; flex-shrink: 0;
+                border-right: 4pt solid #8a6a3a;
+                position: relative; display: flex; align-items: center; justify-content: center;
+            }
+            .print-fret-cell {
+                flex: 1; height: 17px;
+                border-right: 1pt solid #c0a878;
+                background: #fdf8f0 !important;
+                position: relative; display: flex; align-items: center; justify-content: center;
+            }
+            .print-fret-cell:last-child { border-right: none; }
+            .print-str-line {
+                position: absolute; left: 0; right: 0;
+                background: #b0956a !important;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .print-dot {
+                position: relative; z-index: 2;
+                width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .print-fret-nums {
+                display: flex;
+                border: 1pt solid #c8a96e; border-top: none;
+                border-radius: 0 0 2pt 2pt;
+                background: #fff !important;
+                padding: 1px 0;
+                margin-bottom: 0;
+            }
+            .print-fnum-label-spacer { width: 14px; flex-shrink: 0; }
+            .print-fnum-nut { width: 14px; flex-shrink: 0; text-align: center; font-size: 5pt; color: #bbb; }
+            .print-fnum { flex: 1; text-align: center; font-size: 5.5pt; color: #bbb; }
+            .print-fnum-mark { color: #8B5E3C; font-weight: 700; }
         }
+
+        /* 印刷ビュー（通常時は非表示） */
+        #printView { display: none; }
     </style>
 </head>
 <body>
@@ -1215,7 +1298,7 @@
             <button class="disp-tab" data-disp="compact">縮小版</button>
         </div>
         <button class="help-btn" id="helpBtn">使い方ガイド</button>
-        <button class="print-btn" onclick="window.print()">
+        <button class="print-btn" id="printBtn">
             &#128438; 印刷 / PDF保存
         </button>
     </header>
@@ -1401,6 +1484,9 @@
         </div>
 
     </div>
+
+    <!-- ===== 印刷用ビュー ===== -->
+    <div id="printView"></div>
 
     <!-- ===== 他のツールへのバナー ===== -->
     <div class="tool-banner-section">
@@ -2556,6 +2642,144 @@
     document.getElementById('helpBtn').onclick  = () => helpModal.classList.add('open');
     document.getElementById('helpClose').onclick = () => helpModal.classList.remove('open');
     helpModal.onclick = (e) => { if (e.target === helpModal) helpModal.classList.remove('open'); };
+
+    // ── 印刷：最適フレットウィンドウ（12フレット）を自動選択 ──
+    function getBestFretWindow(dots) {
+        const activeFrets = [];
+        for (let s = 0; s < 6; s++)
+            for (let f = 0; f <= FRET_MAX; f++)
+                if (dots[s][f]) activeFrets.push(f);
+        if (activeFrets.length === 0) return 0;
+
+        const minF = Math.min(...activeFrets);
+        const maxF = Math.max(...activeFrets);
+
+        // 12フレット以内に収まる場合：最小フレットの1つ前から
+        if (maxF - minF <= 11) return Math.max(0, minF === 0 ? 0 : minF - 1);
+
+        // 12フレットウィンドウの中でドットが最多の開始フレットを選ぶ
+        let bestFrom = 0, bestCount = 0;
+        for (let start = 0; start <= FRET_MAX - 11; start++) {
+            const count = activeFrets.filter(f => f >= start && f <= start + 11).length;
+            if (count > bestCount) { bestCount = count; bestFrom = start; }
+        }
+        return bestFrom;
+    }
+
+    // ── 印刷用ミニフレットボードを生成 ──
+    function makePrintFretboard(item) {
+        const startFret = getBestFretWindow(item.dots);
+        const showNut = startFret === 0;
+        const endFret = showNut ? 12 : startFret + 11;
+
+        const wrapper = document.createDocumentFragment();
+
+        // フレットボード本体
+        const fb = document.createElement('div');
+        fb.className = 'print-fb';
+        for (let s = 5; s >= 0; s--) {
+            const row = document.createElement('div');
+            row.className = 'print-str-row';
+            const lbl = document.createElement('div');
+            lbl.className = 'print-str-label';
+            lbl.textContent = STR_NAMES[s];
+            row.appendChild(lbl);
+
+            const fStart = showNut ? 0 : startFret;
+            for (let f = fStart; f <= endFret; f++) {
+                const isNut = showNut && f === 0;
+                const cell = document.createElement('div');
+                cell.className = isNut ? 'print-nut-cell' : 'print-fret-cell';
+                const line = document.createElement('div');
+                line.className = 'print-str-line';
+                line.style.height = STR_THICK[s] + 'px';
+                line.style.top = `calc(50% - ${STR_THICK[s] / 2}px)`;
+                cell.appendChild(line);
+                if (item.dots[s][f]) {
+                    const dot = document.createElement('div');
+                    dot.className = 'print-dot';
+                    dot.style.background = item.dots[s][f];
+                    cell.appendChild(dot);
+                }
+                row.appendChild(cell);
+            }
+            fb.appendChild(row);
+        }
+
+        // フレット番号
+        const fnums = document.createElement('div');
+        fnums.className = 'print-fret-nums';
+        const spacer = document.createElement('div');
+        spacer.className = 'print-fnum-label-spacer';
+        fnums.appendChild(spacer);
+
+        const fStart = showNut ? 0 : startFret;
+        for (let f = fStart; f <= endFret; f++) {
+            const isNut = showNut && f === 0;
+            const fn = document.createElement('div');
+            fn.className = isNut ? 'print-fnum-nut'
+                : 'print-fnum' + (MARKER_FRETS.has(f) ? ' print-fnum-mark' : '');
+            fn.textContent = isNut ? '0'
+                : DOUBLE_FRETS.has(f) ? f + '◆◆'
+                : MARKER_FRETS.has(f) ? f + '◆'
+                : String(f);
+            fnums.appendChild(fn);
+        }
+
+        const wrap = document.createElement('div');
+        wrap.appendChild(fb);
+        wrap.appendChild(fnums);
+        return wrap;
+    }
+
+    // ── 印刷ビューを構築してから印刷 ──
+    function buildPrintView() {
+        const slots = loadSlots();
+        const hasFilled = slots.some(s => s !== null);
+        const printView = document.getElementById('printView');
+        printView.innerHTML = '';
+
+        if (!hasFilled) {
+            // スロットが空なら通常の1枚印刷
+            document.body.classList.remove('slot-print');
+            return;
+        }
+
+        document.body.classList.add('slot-print');
+
+        const title = document.createElement('div');
+        title.className = 'print-title';
+        title.textContent = 'TSG Guitar Scale Viewer';
+        printView.appendChild(title);
+
+        const grid = document.createElement('div');
+        grid.className = 'print-slot-grid';
+
+        slots.forEach((item, idx) => {
+            if (!item) return;
+            const div = document.createElement('div');
+            div.className = 'print-slot';
+            const hdr = document.createElement('div');
+            hdr.className = 'print-slot-hdr';
+            hdr.innerHTML = `<span class="print-slot-name">S${idx + 1}　${item.name}</span>`
+                          + `<span class="print-slot-meta">${item.scaleName} / ${rootNames()[item.root]}</span>`;
+            div.appendChild(hdr);
+            div.appendChild(makePrintFretboard(item));
+            grid.appendChild(div);
+        });
+
+        printView.appendChild(grid);
+    }
+
+    document.getElementById('printBtn').onclick = () => {
+        buildPrintView();
+        window.print();
+    };
+
+    window.addEventListener('afterprint', () => {
+        document.body.classList.remove('slot-print');
+        document.getElementById('printView').innerHTML = '';
+    });
 
     // ── 初期描画 ──
     const restored = restoreUIState();
