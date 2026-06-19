@@ -12,6 +12,7 @@
     <meta property="og:url" content="https://scale.tsg-gt.com">
     <meta property="og:image" content="https://scale.tsg-gt.com/images/banner-scale.png">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -762,9 +763,12 @@
         /* ====== Quick slots ====== */
         .slot-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 8px;
             margin-top: 6px;
+        }
+        @media (min-width: 600px) {
+            .slot-grid { grid-template-columns: repeat(4, 1fr); }
         }
         .slot-btn {
             position: relative;
@@ -792,6 +796,7 @@
             border-color: #2176ae;
             background: #fff;
             box-shadow: 0 2px 8px rgba(33,118,174,0.15);
+            padding-left: 22px;
         }
         .slot-btn.filled:hover {
             background: #eef5fb;
@@ -873,6 +878,115 @@
             color: #2176ae;
         }
         .slot-clear:hover { background: #fde0e0; color: #c0392b; }
+        /* 複製ボタン */
+        .slot-copy {
+            width: 17px;
+            height: 17px;
+            border-radius: 50%;
+            border: none;
+            font-size: 0.6rem;
+            line-height: 17px;
+            text-align: center;
+            cursor: pointer;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            font-weight: 700;
+            flex-shrink: 0;
+            background: #e8f5ec;
+            color: #27ae60;
+        }
+        .slot-copy:hover { background: #c6ecd0; }
+        /* ドラッグハンドル */
+        .slot-drag-handle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 18px;
+            height: 100%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 3px;
+            cursor: grab;
+            user-select: none;
+            -webkit-user-select: none;
+            border-radius: 8px 0 0 8px;
+            background: #ddeaf5;
+        }
+        .slot-drag-handle::before,
+        .slot-drag-handle::after {
+            content: '';
+            display: block;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #2176ae;
+            box-shadow: 0 7px 0 #2176ae, 0 14px 0 #2176ae;
+        }
+        .slot-btn.filled .slot-drag-handle { display: flex; }
+        .slot-btn.filled .slot-drag-handle:active { cursor: grabbing; }
+        .slot-btn.filled .slot-drag-handle:hover { background: #c8dff0; }
+        /* SortableJS D&Dクラス */
+        .slot-btn.sortable-ghost {
+            opacity: 0.35;
+            background: #e8f0fe !important;
+            border-color: #7b4fa6 !important;
+        }
+        .slot-btn.sortable-chosen {
+            box-shadow: 0 6px 20px rgba(123,79,166,0.3) !important;
+        }
+        /* 現在読み込み中のスロット */
+        .slot-btn.active-slot {
+            border-color: #27ae60 !important;
+            background: #f0faf3 !important;
+            box-shadow: 0 2px 10px rgba(39,174,96,0.25) !important;
+        }
+        .slot-btn.active-slot .slot-num { color: #27ae60 !important; }
+        .slot-btn.active-slot .slot-drag-handle { background: #d4f0dc; }
+        /* 新規保存インライン（入力欄＋✓ボタン） */
+        .slot-inline-save-wrap {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+        }
+        .slot-inline-ok {
+            flex-shrink: 0;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: none;
+            background: #27ae60;
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            line-height: 1;
+        }
+        .slot-inline-ok:hover { background: #219a52; }
+        /* スロット名インライン編集 */
+        .slot-name-input {
+            width: 100%;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            border: none;
+            border-bottom: 2px solid #2176ae;
+            background: transparent;
+            outline: none;
+            text-align: center;
+            padding: 0 2px;
+            font-family: inherit;
+        }
+        /* ダイアログ表示中に対象スロットをハイライト */
+        .slot-btn.pending {
+            outline: 3px solid #7b4fa6;
+            outline-offset: 2px;
+            background: #f5f0fa !important;
+        }
+        .slot-btn.pending .slot-num { color: #7b4fa6 !important; }
 
         /* ====== Save name dialog (inline) ====== */
         .save-dialog {
@@ -1116,12 +1230,24 @@
 
             <ul>
                 <li>
+                    <strong>💾 作ったスケールを16個まで保存できます</strong>（フリーモード）<br>
+                    「保存」ボタンを押すと、今の画面状態をスロットに保存できます。スロットをクリックすると即座に読み込み直せます。スロット名はダブルクリック（またはスマホなら長押し）で変更できます。ページをリロードしても消えません。
+                </li>
+                <li>
+                    <strong>📦 プリセットを使えます</strong>（フリーモード）<br>
+                    「プリセット」欄からスケールセットを選んで「読み込む」を押すと、ポジション別に整理されたスロットがまとめて読み込まれます。ペンタトニック5ポジション、3ノーツパーストリングなど複数収録しています。
+                </li>
+                <li>
+                    <strong>📤 スロットをエクスポート・インポートできます</strong>（フリーモード）<br>
+                    「エクスポート」でJSONファイルとして保存、「インポート」で読み込みができます。自分で作ったポジションを他の端末で使ったり、先生からデータを受け取ることもできます。
+                </li>
+                <li>
                     <strong>✋ フリーモードで自分だけのスケールを作れます</strong>（フリーモード）<br>
                     フレット上の好きな場所をタップするだけでドットを置いたり消したりできます。既存のスケールにとらわれず、自分で考えたフレーズやポジションを自由に図にできます。レッスン中に「このポジション形を覚えて」と見せるときにも便利です。
                 </li>
                 <li>
                     <strong>🎨 色を使い分けて複数のスケールを重ねられます</strong>（フリーモード）<br>
-                    ドットの色は5色から選べます。たとえばペンタトニック（青）にブルースノート（赤）を足す、といった重ね表示ができます。スケール同士の共通音・違いを視覚的に比較したいときに役立ちます。
+                    ドットの色は5色から選べます。たとえばペンタトニック（青）にブルースノート（紫）を足す、といった重ね表示ができます。スケール同士の共通音・違いを視覚的に比較したいときに役立ちます。
                 </li>
                 <li>
                     <strong>🎸 キーを♭で表示できます</strong><br>
@@ -1222,7 +1348,7 @@
         <div class="free-controls">
             <span class="ctrl-label">ドット色</span>
             <div class="color-btns" id="colorBtns"></div>
-            <div style="margin-left:auto;display:flex;gap:6px;">
+            <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;">
                 <button class="save-btn" id="saveBtn">💾 保存</button>
                 <button class="play-btn" id="playBtn">▶ 再生</button>
                 <button class="stop-btn" id="stopBtn" disabled>■ 停止</button>
@@ -1256,7 +1382,7 @@
             <div class="library-header">
                 <div>
                     <span class="library-title">Quick Slots</span>
-                    <div class="library-subtitle">作成したスケールを8つまで保存・即読み込みできます</div>
+                    <div class="library-subtitle">作成したスケールを16個まで保存・即読み込みできます</div>
                 </div>
                 <div class="library-actions">
                     <button class="lib-export-btn" id="exportBtn">⬇ エクスポート</button>
@@ -1265,6 +1391,9 @@
                 </div>
             </div>
             <div class="slot-grid" id="slotGrid"></div>
+            <div style="text-align:right; margin-top:10px;">
+                <button id="clearAllSlotsBtn" style="font-size:0.75rem; padding:5px 12px; border-radius:6px; border:1px solid #e0b0b0; background:#fdf0f0; color:#c0392b; cursor:pointer;">全スロットを消去</button>
+            </div>
         </div>
 
         <div class="memo-area">
@@ -1298,25 +1427,92 @@
 
     const PRESETS = [
         {
-            label: 'Aマイナーペンタ 5ポジション',
+            label: 'アドリブ入門パック（ペンタ・メジャー・ドリアン 2ポジション）',
             slots: [
-                { name: 'Am Penta Pos.1', scaleName: 'マイナーペンタトニック', root: 9, fretFrom: 0,  fretTo: 4,  color: '#2176ae' },
-                { name: 'Am Penta Pos.2', scaleName: 'マイナーペンタトニック', root: 9, fretFrom: 4,  fretTo: 8,  color: '#2176ae' },
-                { name: 'Am Penta Pos.3', scaleName: 'マイナーペンタトニック', root: 9, fretFrom: 7,  fretTo: 11, color: '#2176ae' },
-                { name: 'Am Penta Pos.4', scaleName: 'マイナーペンタトニック', root: 9, fretFrom: 9,  fretTo: 13, color: '#2176ae' },
-                { name: 'Am Penta Pos.5', scaleName: 'マイナーペンタトニック', root: 9, fretFrom: 12, fretTo: 16, color: '#2176ae' },
+                { name: 'C メジャー2ポジション',      scaleName: 'メジャー',  root: 0, sparse: [[0,5,'b'],[0,7,'b'],[0,8,'r'],[0,12,'b'],[0,13,'b'],[0,15,'b'],[1,5,'b'],[1,7,'b'],[1,8,'b'],[1,12,'b'],[1,14,'b'],[1,15,'r'],[2,5,'b'],[2,7,'b'],[2,12,'b'],[2,14,'b'],[2,15,'b'],[3,4,'b'],[3,5,'r'],[3,7,'b'],[3,12,'b'],[3,14,'b'],[4,5,'b'],[4,6,'b'],[4,8,'b'],[4,12,'b'],[4,13,'r'],[4,15,'b'],[5,5,'b'],[5,7,'b'],[5,8,'r'],[5,12,'b'],[5,13,'b'],[5,15,'b']] },
+                { name: 'ペンタ2ポジション',           scaleName: 'マイナーペンタトニック', root: 9, sparse: [[0,5,'r'],[0,8,'b'],[0,12,'b'],[0,15,'b'],[1,5,'b'],[1,7,'b'],[1,12,'r'],[1,15,'b'],[2,5,'b'],[2,7,'r'],[2,12,'b'],[2,14,'b'],[3,5,'b'],[3,7,'b'],[3,12,'b'],[3,14,'r'],[4,5,'b'],[4,8,'b'],[4,13,'b'],[4,15,'b'],[5,5,'r'],[5,8,'b'],[5,12,'b'],[5,15,'b']] },
+                { name: 'ペンタ2ポジション+ブルーノート', scaleName: 'ブルース',  root: 9, sparse: [[0,5,'r'],[0,8,'b'],[0,11,'p'],[0,12,'b'],[0,15,'b'],[1,5,'b'],[1,6,'p'],[1,7,'b'],[1,12,'r'],[1,15,'b'],[2,5,'b'],[2,7,'r'],[2,12,'b'],[2,13,'p'],[2,14,'b'],[3,5,'b'],[3,7,'b'],[3,8,'p'],[3,12,'b'],[3,14,'r'],[4,5,'b'],[4,8,'b'],[4,13,'b'],[4,15,'b'],[4,16,'p'],[5,5,'r'],[5,8,'b'],[5,12,'b'],[5,15,'b']] },
+                { name: 'ドリアン2ポジション',         scaleName: 'ドリアン',  root: 9, sparse: [[0,5,'r'],[0,7,'p'],[0,8,'b'],[0,12,'b'],[0,14,'p'],[0,15,'b'],[1,5,'b'],[1,7,'b'],[1,12,'r'],[1,14,'p'],[1,15,'b'],[2,4,'p'],[2,5,'b'],[2,7,'b'],[2,12,'b'],[2,14,'b'],[3,4,'p'],[3,5,'b'],[3,7,'b'],[3,11,'p'],[3,12,'b'],[3,14,'r'],[4,5,'b'],[4,7,'p'],[4,8,'b'],[4,12,'p'],[4,13,'b'],[4,15,'b'],[5,5,'r'],[5,7,'p'],[5,8,'b'],[5,12,'b'],[5,14,'p'],[5,15,'b']] },
             ]
         },
         {
-            label: 'Cメジャースケール 7ポジション',
+            label: 'Aマイナーペンタ 5ポジション（CAGED）',
             slots: [
-                { name: 'C Major Pos.1', scaleName: 'メジャー', root: 0, fretFrom: 0,  fretTo: 4,  color: '#c0392b' },
-                { name: 'C Major Pos.2', scaleName: 'メジャー', root: 0, fretFrom: 2,  fretTo: 6,  color: '#c0392b' },
-                { name: 'C Major Pos.3', scaleName: 'メジャー', root: 0, fretFrom: 4,  fretTo: 8,  color: '#c0392b' },
-                { name: 'C Major Pos.4', scaleName: 'メジャー', root: 0, fretFrom: 5,  fretTo: 9,  color: '#c0392b' },
-                { name: 'C Major Pos.5', scaleName: 'メジャー', root: 0, fretFrom: 7,  fretTo: 11, color: '#c0392b' },
-                { name: 'C Major Pos.6', scaleName: 'メジャー', root: 0, fretFrom: 9,  fretTo: 13, color: '#c0392b' },
-                { name: 'C Major Pos.7', scaleName: 'メジャー', root: 0, fretFrom: 12, fretTo: 16, color: '#c0392b' },
+                { name: 'Am Penta 1 Cポジション',        scaleName: 'マイナーペンタトニック', root: 9, fretFrom: 0,  fretTo: 4,  color: '#2176ae' },
+                { name: 'Am Penta 2 Aポジション',        scaleName: 'マイナーペンタトニック', root: 9, fretFrom: 2,  fretTo: 5,  color: '#2176ae' },
+                { name: 'Am Penta 3 Gポジション',        scaleName: 'マイナーペンタトニック', root: 9, fretFrom: 4,  fretTo: 8,  color: '#2176ae' },
+                { name: 'Am Penta 4 Eポジション',        scaleName: 'マイナーペンタトニック', root: 9, fretFrom: 7,  fretTo: 11, color: '#2176ae' },
+                { name: 'Am Penta 5 Dポジション',        scaleName: 'マイナーペンタトニック', root: 9, fretFrom: 9,  fretTo: 13, color: '#2176ae' },
+                { name: 'Am Penta 1 CポジションOctave↑', scaleName: 'マイナーペンタトニック', root: 9, fretFrom: 12, fretTo: 16, color: '#2176ae' },
+            ]
+        },
+        {
+            label: 'Cメジャースケール 7ポジション（ペンタ+αver.）',
+            slots: [
+                { name: 'C Major Pos.1', scaleName: 'メジャー', root: 0, sparse: [[0,1,'b'],[0,3,'b'],[0,5,'b'],[1,2,'b'],[1,3,'r'],[1,5,'b'],[2,2,'b'],[2,3,'b'],[2,5,'b'],[3,2,'b'],[3,4,'b'],[3,5,'r'],[4,3,'b'],[4,5,'b'],[5,1,'b'],[5,3,'b'],[5,5,'b']] },
+                { name: 'C Major Pos.2', scaleName: 'メジャー', root: 0, sparse: [[0,3,'b'],[0,5,'b'],[1,2,'b'],[1,3,'r'],[1,5,'b'],[2,2,'b'],[2,3,'b'],[2,5,'b'],[3,2,'b'],[3,4,'b'],[3,5,'r'],[4,3,'b'],[4,5,'b'],[4,6,'b'],[5,3,'b'],[5,5,'b']] },
+                { name: 'C Major Pos.3', scaleName: 'メジャー', root: 0, sparse: [[0,5,'b'],[0,7,'b'],[0,8,'r'],[1,5,'b'],[1,7,'b'],[1,8,'b'],[2,5,'b'],[2,7,'b'],[3,4,'b'],[3,5,'r'],[3,7,'b'],[4,5,'b'],[4,6,'b'],[4,8,'b'],[5,5,'b'],[5,7,'b'],[5,8,'r']] },
+                { name: 'C Major Pos.4', scaleName: 'メジャー', root: 0, sparse: [[0,7,'b'],[0,8,'r'],[0,10,'b'],[1,7,'b'],[1,8,'b'],[1,10,'b'],[2,7,'b'],[2,9,'b'],[2,10,'r'],[3,7,'b'],[3,9,'b'],[3,10,'b'],[4,8,'b'],[4,10,'b'],[5,7,'b'],[5,8,'r'],[5,10,'b']] },
+                { name: 'C Major Pos.5', scaleName: 'メジャー', root: 0, sparse: [[0,8,'r'],[0,10,'b'],[0,12,'b'],[1,8,'b'],[1,10,'b'],[1,12,'b'],[2,9,'b'],[2,10,'r'],[2,12,'b'],[3,9,'b'],[3,10,'b'],[3,12,'b'],[4,10,'b'],[4,12,'b'],[5,8,'r'],[5,10,'b'],[5,12,'b']] },
+                { name: 'C Major Pos.6', scaleName: 'メジャー', root: 0, sparse: [[0,10,'b'],[0,12,'b'],[0,13,'b'],[1,10,'b'],[1,12,'b'],[2,9,'b'],[2,10,'r'],[2,12,'b'],[3,9,'b'],[3,10,'b'],[3,12,'b'],[4,10,'b'],[4,12,'b'],[4,13,'r'],[5,10,'b'],[5,12,'b'],[5,13,'b']] },
+                { name: 'C Major Pos.7', scaleName: 'メジャー', root: 0, sparse: [[0,12,'b'],[0,13,'b'],[0,15,'b'],[1,12,'b'],[1,14,'b'],[1,15,'r'],[2,12,'b'],[2,14,'b'],[2,15,'b'],[3,12,'b'],[3,14,'b'],[4,12,'b'],[4,13,'r'],[4,15,'b'],[5,12,'b'],[5,13,'b'],[5,15,'b']] },
+            ]
+        },
+        {
+            label: 'Cメジャースケール 7ポジション（3ノーツパーストリング）',
+            slots: [
+                // Pos.1: 6弦Fスタート（4度ポジション）
+                { name: 'C Major 3NPS Pos.1', scaleName: 'メジャー', root: 0, sparse: [[0,1,'b'],[0,3,'b'],[0,5,'b'],[1,2,'b'],[1,3,'r'],[1,5,'b'],[2,2,'b'],[2,3,'b'],[2,5,'b'],[3,2,'b'],[3,4,'b'],[3,5,'r'],[4,3,'b'],[4,5,'b'],[4,6,'b'],[5,3,'b'],[5,5,'b'],[5,7,'b']] },
+                // Pos.2: 6弦Gスタート（5度ポジション）
+                { name: 'C Major 3NPS Pos.2', scaleName: 'メジャー', root: 0, sparse: [[0,3,'b'],[0,5,'b'],[0,7,'b'],[1,3,'r'],[1,5,'b'],[1,7,'b'],[2,3,'b'],[2,5,'b'],[2,7,'b'],[3,4,'b'],[3,5,'r'],[3,7,'b'],[4,5,'b'],[4,6,'b'],[4,8,'b'],[5,5,'b'],[5,7,'b'],[5,8,'r']] },
+                // Pos.3: 6弦Aスタート（6度ポジション）
+                { name: 'C Major 3NPS Pos.3', scaleName: 'メジャー', root: 0, sparse: [[0,5,'b'],[0,7,'b'],[0,8,'r'],[1,5,'b'],[1,7,'b'],[1,8,'b'],[2,5,'b'],[2,7,'b'],[2,9,'b'],[3,5,'r'],[3,7,'b'],[3,9,'b'],[4,6,'b'],[4,8,'b'],[4,10,'b'],[5,7,'b'],[5,8,'r'],[5,10,'b']] },
+                // Pos.4: 6弦Bスタート（7度ポジション）
+                { name: 'C Major 3NPS Pos.4', scaleName: 'メジャー', root: 0, sparse: [[0,7,'b'],[0,8,'r'],[0,10,'b'],[1,7,'b'],[1,8,'b'],[1,10,'b'],[2,7,'b'],[2,9,'b'],[2,10,'r'],[3,7,'b'],[3,9,'b'],[3,10,'b'],[4,8,'b'],[4,10,'b'],[4,12,'b'],[5,8,'r'],[5,10,'b'],[5,12,'b']] },
+                // Pos.5: 6弦Cスタート（ルートポジション）
+                { name: 'C Major 3NPS Pos.5', scaleName: 'メジャー', root: 0, sparse: [[0,8,'r'],[0,10,'b'],[0,12,'b'],[1,8,'b'],[1,10,'b'],[1,12,'b'],[2,9,'b'],[2,10,'r'],[2,12,'b'],[3,9,'b'],[3,10,'b'],[3,12,'b'],[4,10,'b'],[4,12,'b'],[4,13,'r'],[5,10,'b'],[5,12,'b'],[5,13,'b']] },
+                // Pos.6: 6弦Dスタート（2度ポジション）
+                { name: 'C Major 3NPS Pos.6', scaleName: 'メジャー', root: 0, sparse: [[0,10,'b'],[0,12,'b'],[0,13,'b'],[1,10,'b'],[1,12,'b'],[1,14,'b'],[2,10,'r'],[2,12,'b'],[2,14,'b'],[3,10,'b'],[3,12,'b'],[3,14,'b'],[4,12,'b'],[4,13,'r'],[4,15,'b'],[5,12,'b'],[5,13,'b'],[5,15,'b']] },
+                // Pos.7: 6弦Eスタート（3度ポジション）
+                { name: 'C Major 3NPS Pos.7', scaleName: 'メジャー', root: 0, sparse: [[0,12,'b'],[0,13,'b'],[0,15,'b'],[1,12,'b'],[1,14,'b'],[1,15,'r'],[2,12,'b'],[2,14,'b'],[2,15,'b'],[3,12,'b'],[3,14,'b'],[3,16,'b'],[4,13,'r'],[4,15,'b'],[4,17,'b'],[5,13,'b'],[5,15,'b'],[5,17,'b']] },
+            ]
+        },
+        {
+            label: 'Cメロディックマイナー 7ポジション（3ノーツパーストリング）',
+            slots: [
+                // Pos.1: 6弦Fスタート（4度）― Cm melodic: C D Eb F G A B
+                { name: 'Cm Melodic 3NPS Pos.1', scaleName: 'メロディックマイナー', root: 0, sparse: [[0,1,'b'],[0,3,'b'],[0,5,'b'],[1,2,'b'],[1,3,'r'],[1,5,'b'],[2,1,'b'],[2,3,'b'],[2,5,'b'],[3,2,'b'],[3,4,'b'],[3,5,'r'],[4,1,'r'],[4,3,'b'],[4,4,'b'],[5,1,'b'],[5,3,'b'],[5,5,'b']] },
+                // Pos.2: 6弦Gスタート（5度）
+                { name: 'Cm Melodic 3NPS Pos.2', scaleName: 'メロディックマイナー', root: 0, sparse: [[0,3,'b'],[0,5,'b'],[0,7,'b'],[1,3,'r'],[1,5,'b'],[1,6,'b'],[2,3,'b'],[2,5,'b'],[2,7,'b'],[3,4,'b'],[3,5,'r'],[3,7,'b'],[4,4,'b'],[4,6,'b'],[4,8,'b'],[5,5,'b'],[5,7,'b'],[5,8,'r']] },
+                // Pos.3: 6弦Aスタート（6度）
+                { name: 'Cm Melodic 3NPS Pos.3', scaleName: 'メロディックマイナー', root: 0, sparse: [[0,5,'b'],[0,7,'b'],[0,8,'r'],[1,5,'b'],[1,6,'b'],[1,8,'b'],[2,5,'b'],[2,7,'b'],[2,9,'b'],[3,5,'r'],[3,7,'b'],[3,8,'b'],[4,6,'b'],[4,8,'b'],[4,10,'b'],[5,7,'b'],[5,8,'r'],[5,10,'b']] },
+                // Pos.4: 6弦Bスタート（7度）
+                { name: 'Cm Melodic 3NPS Pos.4', scaleName: 'メロディックマイナー', root: 0, sparse: [[0,7,'b'],[0,8,'r'],[0,10,'b'],[1,6,'b'],[1,8,'b'],[1,10,'b'],[2,7,'b'],[2,9,'b'],[2,10,'r'],[3,7,'b'],[3,8,'b'],[3,10,'b'],[4,8,'b'],[4,10,'b'],[4,12,'b'],[5,8,'r'],[5,10,'b'],[5,11,'b']] },
+                // Pos.5: 6弦Cスタート（ルート）
+                { name: 'Cm Melodic 3NPS Pos.5', scaleName: 'メロディックマイナー', root: 0, sparse: [[0,8,'r'],[0,10,'b'],[0,11,'b'],[1,8,'b'],[1,10,'b'],[1,12,'b'],[2,9,'b'],[2,10,'r'],[2,12,'b'],[3,8,'b'],[3,10,'b'],[3,12,'b'],[4,10,'b'],[4,12,'b'],[4,13,'r'],[5,10,'b'],[5,11,'b'],[5,13,'b']] },
+                // Pos.6: 6弦Dスタート（2度）
+                { name: 'Cm Melodic 3NPS Pos.6', scaleName: 'メロディックマイナー', root: 0, sparse: [[0,10,'b'],[0,11,'b'],[0,13,'b'],[1,10,'b'],[1,12,'b'],[1,14,'b'],[2,10,'r'],[2,12,'b'],[2,13,'b'],[3,10,'b'],[3,12,'b'],[3,14,'b'],[4,12,'b'],[4,13,'r'],[4,15,'b'],[5,11,'b'],[5,13,'b'],[5,15,'b']] },
+                // Pos.7: 6弦Ebスタート（♭3度）
+                { name: 'Cm Melodic 3NPS Pos.7', scaleName: 'メロディックマイナー', root: 0, sparse: [[0,11,'b'],[0,13,'b'],[0,15,'b'],[1,12,'b'],[1,14,'b'],[1,15,'r'],[2,12,'b'],[2,13,'b'],[2,15,'b'],[3,12,'b'],[3,14,'b'],[3,16,'b'],[4,13,'r'],[4,15,'b'],[4,16,'b'],[5,13,'b'],[5,15,'b'],[5,17,'b']] },
+            ]
+        },
+        {
+            label: 'Cリディアンドミナント 7ポジション（3ノーツパーストリング）',
+            slots: [
+                // Pos.1: 6弦F#スタート（#4度）― C Lydian Dom: C D E F# G A Bb
+                { name: 'C LydDom 3NPS Pos.1', scaleName: 'リディアンドミナント7th', root: 0, sparse: [[0,2,'b'],[0,3,'b'],[0,5,'b'],[1,1,'b'],[1,3,'r'],[1,5,'b'],[2,2,'b'],[2,4,'b'],[2,5,'b'],[3,2,'b'],[3,3,'b'],[3,5,'r'],[4,3,'b'],[4,5,'b'],[4,7,'b'],[5,3,'b'],[5,5,'b'],[5,6,'b']] },
+                // Pos.2: 6弦Gスタート（5度）
+                { name: 'C LydDom 3NPS Pos.2', scaleName: 'リディアンドミナント7th', root: 0, sparse: [[0,3,'b'],[0,5,'b'],[0,6,'b'],[1,3,'r'],[1,5,'b'],[1,7,'b'],[2,4,'b'],[2,5,'b'],[2,7,'b'],[3,3,'b'],[3,5,'r'],[3,7,'b'],[4,5,'b'],[4,7,'b'],[4,8,'b'],[5,5,'b'],[5,6,'b'],[5,8,'r']] },
+                // Pos.3: 6弦Aスタート（6度）
+                { name: 'C LydDom 3NPS Pos.3', scaleName: 'リディアンドミナント7th', root: 0, sparse: [[0,5,'b'],[0,6,'b'],[0,8,'r'],[1,5,'b'],[1,7,'b'],[1,9,'b'],[2,5,'b'],[2,7,'b'],[2,8,'b'],[3,5,'r'],[3,7,'b'],[3,9,'b'],[4,7,'b'],[4,8,'b'],[4,10,'b'],[5,6,'b'],[5,8,'r'],[5,10,'b']] },
+                // Pos.4: 6弦Bbスタート（♭7度）
+                { name: 'C LydDom 3NPS Pos.4', scaleName: 'リディアンドミナント7th', root: 0, sparse: [[0,6,'b'],[0,8,'r'],[0,10,'b'],[1,7,'b'],[1,9,'b'],[1,10,'b'],[2,7,'b'],[2,8,'b'],[2,10,'r'],[3,7,'b'],[3,9,'b'],[3,11,'b'],[4,8,'b'],[4,10,'b'],[4,11,'b'],[5,8,'r'],[5,10,'b'],[5,12,'b']] },
+                // Pos.5: 6弦Cスタート（ルート）
+                { name: 'C LydDom 3NPS Pos.5', scaleName: 'リディアンドミナント7th', root: 0, sparse: [[0,8,'r'],[0,10,'b'],[0,12,'b'],[1,9,'b'],[1,10,'b'],[1,12,'b'],[2,8,'b'],[2,10,'r'],[2,12,'b'],[3,9,'b'],[3,11,'b'],[3,12,'b'],[4,10,'b'],[4,11,'b'],[4,13,'r'],[5,10,'b'],[5,12,'b'],[5,14,'b']] },
+                // Pos.6: 6弦Dスタート（2度）
+                { name: 'C LydDom 3NPS Pos.6', scaleName: 'リディアンドミナント7th', root: 0, sparse: [[0,10,'b'],[0,12,'b'],[0,14,'b'],[1,10,'b'],[1,12,'b'],[1,13,'b'],[2,10,'r'],[2,12,'b'],[2,14,'b'],[3,11,'b'],[3,12,'b'],[3,14,'b'],[4,11,'b'],[4,13,'r'],[4,15,'b'],[5,12,'b'],[5,14,'b'],[5,15,'b']] },
+                // Pos.7: 6弦Eスタート（3度）
+                { name: 'C LydDom 3NPS Pos.7', scaleName: 'リディアンドミナント7th', root: 0, sparse: [[0,12,'b'],[0,14,'b'],[0,15,'b'],[1,12,'b'],[1,13,'b'],[1,15,'r'],[2,12,'b'],[2,14,'b'],[2,16,'b'],[3,12,'b'],[3,14,'b'],[3,15,'b'],[4,13,'r'],[4,15,'b'],[4,17,'b'],[5,14,'b'],[5,15,'b'],[5,17,'b']] },
             ]
         },
     ];
@@ -1428,7 +1624,7 @@
         });
         buildRootBtns(rootBtnsEl, (i) => { root = i; renderAuto(); });
         rootBtnsEl.querySelectorAll('.rbtn')[root].classList.add('active');
-        buildRootBtns(freeRootBtnsEl, (i) => { freeRoot = i; });
+        buildRootBtns(freeRootBtnsEl, (i) => { freeRoot = i; autoSaveActiveSlot(); });
         freeRootBtnsEl.querySelectorAll('.rbtn')[freeRoot].classList.add('active');
         renderAuto();
         renderFree();
@@ -1459,7 +1655,7 @@
     // ── フリーモード: ルート音ボタン ──
     let freeRoot = 0;
     const freeRootBtnsEl = document.getElementById('freeRootBtns');
-    buildRootBtns(freeRootBtnsEl, (i) => { freeRoot = i; });
+    buildRootBtns(freeRootBtnsEl, (i) => { freeRoot = i; autoSaveActiveSlot(); });
 
 
     // ── フリーモード: スケール選択 ──
@@ -1471,7 +1667,7 @@
         if (name === freeScaleName) o.selected = true;
         freeScaleSelEl.appendChild(o);
     });
-    freeScaleSelEl.onchange = () => { freeScaleName = freeScaleSelEl.value; };
+    freeScaleSelEl.onchange = () => { freeScaleName = freeScaleSelEl.value; autoSaveActiveSlot(); };
 
     // ── フリーモード: 音名表記切替 ──
     let freeNotation = 'en';
@@ -1481,6 +1677,7 @@
             document.querySelectorAll('[data-fn]').forEach(x => x.classList.remove('active'));
             b.classList.add('active');
             renderFree();
+            autoSaveActiveSlot();
         };
     });
 
@@ -1509,6 +1706,7 @@
             }
         }
         renderFree();
+        autoSaveActiveSlot();
     };
 
     // ── フリーモード: カラーボタン ──
@@ -1530,6 +1728,7 @@
     document.getElementById('clearBtn').onclick = () => {
         for (let s = 0; s < 6; s++) freeDots[s].fill(null);
         renderFree();
+        autoSaveActiveSlot();
     };
 
     // ── 自動モード: ラベル取得 ──
@@ -1654,6 +1853,7 @@
         const fnEl = document.getElementById('fretNums-free');
         buildFretNums(fnEl, dispFrets);
         if (isCompact) fnEl.classList.add('compact-nums'); else fnEl.classList.remove('compact-nums');
+
     }
 
     function makeFreeCell(s, f) {
@@ -1695,9 +1895,22 @@
         cell.onclick = () => {
             freeDots[s][f] = freeDots[s][f] ? null : freeColor;
             renderFree();
+            autoSaveActiveSlot();
         };
 
         return cell;
+    }
+
+    // ── アクティブスロットへの自動保存 ──
+    function autoSaveActiveSlot() {
+        if (activeSlotIdx === null) return;
+        const slots = loadSlots();
+        if (!slots[activeSlotIdx]) return;
+        slots[activeSlotIdx].dots = freeDots.map(row => [...row]);
+        slots[activeSlotIdx].root = freeRoot;
+        slots[activeSlotIdx].scaleName = freeScaleName;
+        slots[activeSlotIdx].notation = freeNotation;
+        saveSlots(slots);
     }
 
     // ── 音声再生 ──
@@ -1849,6 +2062,7 @@
 
     let pendingSlotIdx = null;    // 保存ダイアログで使うスロット番号
     let renameMode = false;       // true=名前変更モード、false=新規保存モード
+    let activeSlotIdx = null;     // 現在フレットボードに表示中のスロット番号
 
     function renderSlots() {
         const slots = loadSlots();
@@ -1856,7 +2070,7 @@
         grid.innerHTML = '';
         slots.forEach((item, idx) => {
             const btn = document.createElement('button');
-            btn.className = 'slot-btn' + (item ? ' filled' : '');
+            btn.className = 'slot-btn' + (item ? ' filled' : '') + (idx === activeSlotIdx ? ' active-slot' : '');
 
             if (item) {
                 btn.innerHTML = `
@@ -1864,29 +2078,125 @@
                     <span class="slot-name">${item.name}</span>
                     <span class="slot-meta">${item.scaleName} / ${rootNames()[item.root]}</span>
                     <span class="slot-icons">
+                        <button class="slot-copy" title="複製">⎘</button>
                         <button class="slot-rename" title="名前変更">✎</button>
                         <button class="slot-clear" title="クリア">✕</button>
                     </span>
+                    <span class="slot-drag-handle"></span>
                 `;
-                btn.onclick = () => readSlot(item);
-                btn.querySelector('.slot-rename').onclick = (e) => {
+                btn.onclick = () => {
+                    autoSaveActiveSlot();   // 切り替え前に現在スロットを保存
+                    activeSlotIdx = idx;
+                    readSlot(loadSlots()[idx]); // 最新データをLocalStorageから読む
+                    // DOM再構築せずアクティブクラスだけ更新（dblclickが壊れるのを防ぐ）
+                    document.querySelectorAll('.slot-btn').forEach((b, i) => {
+                        b.classList.toggle('active-slot', i === idx);
+                    });
+                };
+
+                // インライン名前編集
+                const nameEl = btn.querySelector('.slot-name');
+                const startInlineRename = (e) => {
+                    e?.stopPropagation();
+                    if (nameEl.querySelector('input')) return; // 多重起動防止
+                    const currentName = item.name;
+                    const inp = document.createElement('input');
+                    inp.type = 'text';
+                    inp.value = currentName;
+                    inp.className = 'slot-name-input';
+                    inp.maxLength = 30;
+                    nameEl.textContent = '';
+                    nameEl.appendChild(inp);
+                    btn.onclick = null; // 編集中はスロット読み込みを無効化
+                    inp.focus();
+                    inp.select();
+
+                    const commit = () => {
+                        const newName = inp.value.trim();
+                        if (newName && newName !== currentName) {
+                            const slots = loadSlots();
+                            if (slots[idx]) slots[idx].name = newName;
+                            saveSlots(slots);
+                            item.name = newName; // ローカル参照も更新
+                        }
+                        renderSlots();
+                    };
+                    inp.addEventListener('blur', commit);
+                    inp.addEventListener('keydown', (ev) => {
+                        if (ev.key === 'Enter') { ev.preventDefault(); inp.blur(); }
+                        if (ev.key === 'Escape') { inp.removeEventListener('blur', commit); renderSlots(); }
+                        if (ev.key === 'Tab') {
+                            ev.preventDefault();
+                            inp.removeEventListener('blur', commit);
+                            // 現在の名前を確定保存
+                            const newName = inp.value.trim();
+                            if (newName && newName !== currentName) {
+                                const slots = loadSlots();
+                                if (slots[idx]) slots[idx].name = newName;
+                                saveSlots(slots);
+                            }
+                            // 次のスロット（Shift+Tabなら前）を探して名前編集開始
+                            const step = ev.shiftKey ? -1 : 1;
+                            const slots = loadSlots();
+                            let nextIdx = idx + step;
+                            // 入力済みスロットの範囲内でループ
+                            while (nextIdx >= 0 && nextIdx < slots.length && slots[nextIdx]) {
+                                const nextBtns = document.querySelectorAll('.slot-btn.filled');
+                                // slotGrid内の filled ボタンの順番で探す
+                                const allFilled = [...document.querySelectorAll('#slotGrid .slot-btn.filled')];
+                                const currentFilled = allFilled.findIndex(b => b === btn);
+                                const targetFilled = allFilled[currentFilled + step];
+                                if (targetFilled) {
+                                    const targetNameEl = targetFilled.querySelector('.slot-name');
+                                    if (targetNameEl) {
+                                        renderSlots(); // DOM再構築
+                                        // 再構築後に対象スロットの名前編集を起動
+                                        const newAllFilled = [...document.querySelectorAll('#slotGrid .slot-btn.filled')];
+                                        const newTarget = newAllFilled[currentFilled + step];
+                                        newTarget?.querySelector('.slot-rename')?.click();
+                                    }
+                                } else {
+                                    renderSlots();
+                                }
+                                break;
+                            }
+                        }
+                    });
+                    inp.addEventListener('click', (ev) => ev.stopPropagation());
+                };
+
+                // ✎ボタン・ダブルクリック（PC）・長押し（タブレット）
+                btn.querySelector('.slot-rename').onclick = startInlineRename;
+                nameEl.ondblclick = startInlineRename;
+
+                let _longPressTimer = null;
+                nameEl.addEventListener('touchstart', () => {
+                    _longPressTimer = setTimeout(startInlineRename, 500);
+                }, { passive: true });
+                nameEl.addEventListener('touchend', () => clearTimeout(_longPressTimer), { passive: true });
+                nameEl.addEventListener('touchmove', () => clearTimeout(_longPressTimer), { passive: true });
+                btn.querySelector('.slot-copy').onclick = (e) => {
                     e.stopPropagation();
-                    pendingSlotIdx = idx;
-                    renameMode = true;
-                    const dialog = document.getElementById('saveDialog');
-                    const okBtn = document.getElementById('saveOkBtn');
-                    okBtn.textContent = '変更する';
-                    dialog.classList.add('open');
-                    const input = document.getElementById('saveNameInput');
-                    input.value = item.name;
-                    input.select();
-                    input.focus();
+                    const slots = loadSlots();
+                    // 末尾が埋まっている場合は確認
+                    if (slots[slots.length - 1] !== null) {
+                        const last = slots[slots.length - 1];
+                        if (!confirm(`S${slots.length}「${last.name}」が押し出されて消えてしまいますが、よろしいですか？`)) return;
+                    }
+                    // idx+1 以降を1つ後ろにシフトして直後に挿入
+                    for (let i = slots.length - 1; i > idx + 1; i--) {
+                        slots[i] = slots[i - 1];
+                    }
+                    slots[idx + 1] = JSON.parse(JSON.stringify(item));
+                    saveSlots(slots);
+                    renderSlots();
                 };
                 btn.querySelector('.slot-clear').onclick = (e) => {
                     e.stopPropagation();
                     if (!confirm(`S${idx + 1}「${item.name}」をクリアしますか？`)) return;
                     const slots = loadSlots();
                     slots[idx] = null;
+                    if (activeSlotIdx === idx) activeSlotIdx = null;
                     saveSlots(slots);
                     renderSlots();
                 };
@@ -1896,19 +2206,66 @@
                     <span class="slot-empty-icon">＋</span>
                     <span class="slot-empty-label">空き</span>
                 `;
-                btn.onclick = () => {
-                    pendingSlotIdx = idx;
-                    const dialog = document.getElementById('saveDialog');
-                    dialog.classList.add('open');
-                    const input = document.getElementById('saveNameInput');
-                    // デフォルト名を自動入力
-                    input.value = `${rootNames()[freeRoot]} ${freeScaleName}`;
-                    input.select();
-                    input.focus();
-                };
+                btn.onclick = () => startInlineSave(btn, idx);
             }
             grid.appendChild(btn);
         });
+        initSlotSortable();
+    }
+
+    // 空きスロットのインライン名前入力
+    function startInlineSave(btn, idx) {
+        const emptyIcon = btn.querySelector('.slot-empty-icon');
+        const emptyLabel = btn.querySelector('.slot-empty-label');
+        if (!emptyIcon || btn.querySelector('input')) return;
+
+        emptyIcon.style.display = 'none';
+        emptyLabel.style.display = 'none';
+
+        // 入力欄 + ✓ボタンをラップするコンテナ
+        const wrap = document.createElement('div');
+        wrap.className = 'slot-inline-save-wrap';
+
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.className = 'slot-name-input';
+        inp.placeholder = '名前を入力…';
+        inp.value = `${rootNames()[freeRoot]} ${freeScaleName}`;
+        inp.maxLength = 30;
+
+        const okBtn = document.createElement('button');
+        okBtn.className = 'slot-inline-ok';
+        okBtn.textContent = '✓';
+        okBtn.title = '保存';
+
+        wrap.appendChild(inp);
+        wrap.appendChild(okBtn);
+        btn.appendChild(wrap);
+        btn.onclick = null;
+        inp.focus();
+        inp.select();
+
+        const cancel = () => renderSlots();
+        const commit = () => {
+            const name = inp.value.trim();
+            if (!name) { cancel(); return; }
+            writeSlot(idx, name);
+            activeSlotIdx = idx;
+            renderSlots();
+        };
+
+        // blur はキャンセル（✓ボタンタップ時は mousedown で先にフラグを立てる）
+        let _committing = false;
+        okBtn.addEventListener('mousedown', () => { _committing = true; });
+        okBtn.addEventListener('touchstart', () => { _committing = true; }, { passive: true });
+        okBtn.addEventListener('click', (e) => { e.stopPropagation(); commit(); });
+        inp.addEventListener('blur', () => { if (!_committing) cancel(); _committing = false; });
+        inp.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); _committing = true; commit(); }
+            if (e.key === 'Escape') { cancel(); }
+        });
+        inp.addEventListener('click', (e) => e.stopPropagation());
+        wrap.addEventListener('click', (e) => e.stopPropagation());
     }
 
     // 保存ボタン（上部コントロールの💾）→ 空きスロットに保存 or 上書き選択
@@ -1923,6 +2280,7 @@
             if (!choice) return;
             pendingSlotIdx = 0;
         }
+        setPendingHighlight(pendingSlotIdx);
         const dialog = document.getElementById('saveDialog');
         dialog.classList.add('open');
         const input = document.getElementById('saveNameInput');
@@ -1930,10 +2288,51 @@
         input.select();
         input.focus();
     };
+    // ── SortableJS D&D並び替え ──
+    let _slotSortable = null;
+    function initSlotSortable() {
+        if (typeof Sortable === 'undefined') {
+            window.addEventListener('load', initSlotSortable, { once: true });
+            return;
+        }
+        const grid = document.getElementById('slotGrid');
+        if (!grid) return;
+        if (_slotSortable) { _slotSortable.destroy(); _slotSortable = null; }
+        _slotSortable = new Sortable(grid, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            handle: '.slot-drag-handle',
+            forceFallback: true,
+            delay: 150,
+            delayOnTouchOnly: true,
+            touchStartThreshold: 4,
+            onEnd: function(evt) {
+                const oldIdx = evt.oldIndex;
+                const newIdx = evt.newIndex;
+                if (oldIdx === newIdx) return;
+                const slots = loadSlots();
+                const moved = slots.splice(oldIdx, 1)[0];
+                slots.splice(newIdx, 0, moved);
+                saveSlots(slots);
+                renderSlots();
+            }
+        });
+    }
+
+    function setPendingHighlight(idx) {
+        document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('pending'));
+        if (idx !== null) {
+            const btns = document.querySelectorAll('.slot-btn');
+            if (btns[idx]) btns[idx].classList.add('pending');
+        }
+    }
+
     function closeDialog() {
         document.getElementById('saveDialog').classList.remove('open');
         document.getElementById('saveNameInput').value = '';
         document.getElementById('saveOkBtn').textContent = '保存する';
+        setPendingHighlight(null);
         pendingSlotIdx = null;
         renameMode = false;
     }
@@ -1960,6 +2359,14 @@
     // ── プリセット ──
 
     // プリセット定義からドット配列を生成する
+    // sparse dots: [[stringIdx, fret, 'r'|'b'|'p'|'o'|'g'], ...] → 6×(FRET_MAX+1) array
+    function sparseToDotsArray(sparse) {
+        const COLOR = { r:'#c0392b', b:'#2176ae', p:'#8e44ad', o:'#e67e22', g:'#27ae60' };
+        const dots = Array.from({length: 6}, () => Array(FRET_MAX + 1).fill(null));
+        sparse.forEach(([s, f, c]) => { dots[s][f] = COLOR[c] || c; });
+        return dots;
+    }
+
     function generateDotsFromPreset(slotDef) {
         const scale = SCALES[slotDef.scaleName];
         if (!scale) return Array.from({length: 6}, () => Array(FRET_MAX + 1).fill(null));
@@ -2006,10 +2413,11 @@
                 scaleName: def.scaleName,
                 root: def.root,
                 notation: 'en',
-                dots: generateDotsFromPreset(def)
+                dots: def.sparse ? sparseToDotsArray(def.sparse) : generateDotsFromPreset(def)
             };
         });
         saveSlots(slots);
+        activeSlotIdx = null;
         renderSlots();
     };
 
@@ -2025,9 +2433,9 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         const today = new Date();
-        const dateStr = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
+        const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
         a.href = url;
-        a.download = `tsg-scale-slots-${dateStr}.json`;
+        a.download = `${dateStr}_scale-slots.json`;
         a.click();
         URL.revokeObjectURL(url);
     };
@@ -2045,7 +2453,9 @@
                 const data = JSON.parse(ev.target.result);
                 let incoming;
                 if (data.version === 2 && Array.isArray(data.slots)) {
-                    incoming = data.slots; // スロット配列（null含む）
+                    // 古いデータが8スロット等でも常にSLOT_COUNT分に正規化
+                    incoming = Array(SLOT_COUNT).fill(null);
+                    data.slots.slice(0, SLOT_COUNT).forEach((item, i) => { incoming[i] = item; });
                 } else if (Array.isArray(data.patterns)) {
                     // v1形式（旧ライブラリ）→ 先頭スロットから順に詰める
                     incoming = Array(SLOT_COUNT).fill(null);
@@ -2055,6 +2465,7 @@
                 }
                 if (!confirm('現在のスロットをインポートデータで上書きしますか？')) return;
                 saveSlots(incoming);
+                activeSlotIdx = null;
                 renderSlots();
                 alert('インポート完了しました');
             } catch(err) {
@@ -2065,7 +2476,81 @@
         reader.readAsText(file);
     };
 
-    // ── 初期描画 ──
+    // ── 全スロット消去 ──
+    document.getElementById('clearAllSlotsBtn').onclick = () => {
+        const slots = loadSlots();
+        const filled = slots.filter(s => s !== null).length;
+        if (filled === 0) { alert('消去するスロットがありません。'); return; }
+        if (!confirm(`保存済みの ${filled} 件のスロットをすべて消去しますか？\nこの操作は元に戻せません。`)) return;
+        saveSlots(Array(SLOT_COUNT).fill(null));
+        activeSlotIdx = null;
+        renderSlots();
+    };
+
+    // ── UI状態の永続化（F5リフレッシュ対策）──
+    const UI_STATE_KEY = 'tsg_scale_ui';
+
+    function saveUIState() {
+        const state = {
+            mode: document.querySelector('.mode-tab.active')?.dataset.mode || 'auto',
+            disp: dispFrets === 12 ? 'compact' : 'full',
+            useFlat,
+            root, scaleName, notation,
+            freeRoot, freeScaleName, freeNotation, freeColor,
+            freeDots: freeDots.map(row => [...row])
+        };
+        localStorage.setItem(UI_STATE_KEY, JSON.stringify(state));
+    }
+
+    function restoreUIState() {
+        try {
+            const state = JSON.parse(localStorage.getItem(UI_STATE_KEY));
+            if (!state) return false;
+
+            // ♭/♯
+            if (state.useFlat !== undefined) { useFlat = state.useFlat; applyAccToggle(); }
+
+            // 表示フレット数
+            if (state.disp) {
+                dispFrets = state.disp === 'compact' ? 12 : FRET_MAX;
+                document.querySelectorAll('.disp-tab').forEach(b => b.classList.toggle('active', b.dataset.disp === state.disp));
+            }
+
+            // 自動モード
+            if (state.root !== undefined) { root = state.root; rootBtnsEl.querySelectorAll('.rbtn').forEach((b,i) => b.classList.toggle('active', i === root)); }
+            if (state.scaleName && SCALES[state.scaleName]) { scaleName = state.scaleName; scaleSelEl.value = scaleName; }
+            if (state.notation) { notation = state.notation; document.querySelectorAll('[data-n]').forEach(b => b.classList.toggle('active', b.dataset.n === notation)); }
+
+            // フリーモード
+            if (state.freeRoot !== undefined) { freeRoot = state.freeRoot; freeRootBtnsEl.querySelectorAll('.rbtn').forEach((b,i) => b.classList.toggle('active', i === freeRoot)); }
+            if (state.freeScaleName && SCALES[state.freeScaleName]) { freeScaleName = state.freeScaleName; freeScaleSelEl.value = freeScaleName; }
+            if (state.freeNotation) { freeNotation = state.freeNotation; document.querySelectorAll('[data-fn]').forEach(b => b.classList.toggle('active', b.dataset.fn === freeNotation)); }
+            if (state.freeColor && FREE_COLORS.includes(state.freeColor)) {
+                freeColor = state.freeColor;
+                const colorIdx = FREE_COLORS.indexOf(freeColor);
+                document.querySelectorAll('.cbtn').forEach((b, i) => b.classList.toggle('active', i === colorIdx));
+            }
+
+            // フリーモードのドット
+            if (state.freeDots) {
+                for (let s = 0; s < 6; s++)
+                    for (let f = 0; f <= FRET_MAX; f++)
+                        freeDots[s][f] = state.freeDots[s]?.[f] || null;
+            }
+
+            // モード切替（最後に実行）
+            if (state.mode === 'free') {
+                document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === 'free'));
+                document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-free'));
+            }
+
+            return true;
+        } catch(e) { return false; }
+    }
+
+    // ページ離脱（F5・タブ閉じ）直前にまとめて保存
+    window.addEventListener('beforeunload', saveUIState);
+
     // ── ヘルプモーダル ──
     const helpModal = document.getElementById('helpModal');
     document.getElementById('helpBtn').onclick  = () => helpModal.classList.add('open');
@@ -2073,12 +2558,17 @@
     helpModal.onclick = (e) => { if (e.target === helpModal) helpModal.classList.remove('open'); };
 
     // ── 初期描画 ──
+    const restored = restoreUIState();
     renderAuto();
     renderSlots();
-    // フリーモード初期値: フレット4〜8のメジャースケールを読み込んだ状態
-    document.getElementById('fretFrom').value = 4;
-    document.getElementById('fretTo').value = 8;
-    document.getElementById('loadBtn').click();
+    if (restored) {
+        renderFree();
+    } else {
+        // 初回のみデフォルト値でフリーモードを初期化
+        document.getElementById('fretFrom').value = 4;
+        document.getElementById('fretTo').value = 8;
+        document.getElementById('loadBtn').click();
+    }
     </script>
 </body>
 </html>
