@@ -2410,6 +2410,18 @@
                 const moved = slots.splice(oldIdx, 1)[0];
                 slots.splice(newIdx, 0, moved);
                 saveSlots(slots);
+
+                // activeSlotIdxを配列の並び替えに追従させる（ずれるとautoSaveで別スロットを上書きしてしまう）
+                if (activeSlotIdx !== null) {
+                    if (activeSlotIdx === oldIdx) {
+                        activeSlotIdx = newIdx;
+                    } else if (oldIdx < activeSlotIdx && newIdx >= activeSlotIdx) {
+                        activeSlotIdx -= 1;
+                    } else if (oldIdx > activeSlotIdx && newIdx <= activeSlotIdx) {
+                        activeSlotIdx += 1;
+                    }
+                }
+
                 renderSlots();
             }
         });
